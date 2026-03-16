@@ -59,42 +59,75 @@ async def health():
 
 # ── Predict Endpoint ──────────────────────────────────────────────────
 @app.post('/predict')
-async def predict(req: PredictRequest):
+async def predict(payload: dict):
+    detected_at = time.time()
     store  = ModelStore.get()
-    result = store.predict(req.host_features, req.net_features)
+    
+    host_features = payload.get('host_features', {})
+    net_features  = payload.get('net_features', {})
+    
+    try:
+        result = store.predict(host_features, net_features)
 
-    # Attach SHAP explanations
-    x_host_sc = store.host_scaler.transform(
-        np.array([[req.host_features[c] for c in store.host_cols]])
-    )[0]
-    x_net_sc = store.net_scaler.transform(
-        np.array([[req.net_features[c] for c in store.net_cols]])
-    )[0]
+        # Attach SHAP explanations
+        x_host_sc = store.host_scaler.transform(
+            np.array([[host_features[c] for c in store.host_cols]])
+        )[0]
+        x_net_sc = store.net_scaler.transform(
+            np.array([[net_features.get(c, 0) for c in store.net_cols]]) if net_features else np.zeros((1, len(store.net_cols)))
+        )[0]
 
-    result['shap_host']    = app.state.explainer.explain_host(x_host_sc)[:5]
-    result['shap_network'] = app.state.explainer.explain_network(x_net_sc)[:5]
-    result['shap_meta']    = app.state.explainer.explain_meta(
-        result['p_host'], result['p_network']
-    )
-    result['entity_id'] = req.entity_id
-    result['timestamp'] = time.time()
+        result['shap_host']    = app.state.explainer.explain_host(x_host_sc)[:5]
+        result['shap_network'] = app.state.explainer.explain_network(x_net_sc)[:5]
+        result['shap_meta']    = app.state.explainer.explain_meta(
+            result['p_host'], result['p_network']
+        )
+    except Exception:
+        result = {
+            'p_host': 0.0,
+            'p_network': 0.0,
+            'final_score': 0.0,
+            'threat_level': 'LOW'
+        }
 
-    # Push to Redis alert stream for dashboard
-    r.lpush('alerts', json.dumps(result))
-    r.ltrim('alerts', 0, 999)   # Keep last 1000 alerts
+    # Calculate MTTD if event_timestamp is available
+    event_ts = payload.get('window_end') or payload.get('event_timestamp')
+    mttd_seconds = None
+    if event_ts:
+        mttd_seconds = round(detected_at - float(event_ts), 3)
 
-    # Honeypot trigger: store scores and flag IP
-    if result['final_score'] > 0.85:
-        entity_key = f"entity_scores:{req.entity_id}"
+    # Build alert object
+    alert = {
+        'id':           str(int(detected_at * 1000)),
+        'entity_id':    payload.get('entity_id', 'unknown'),
+        'p_host':       result.get('p_host', 0.0),
+        'p_network':    result.get('p_network', 0.0),
+        'final_score':  result.get('final_score', 0.0),
+        'threat_level': result.get('threat_level', 'LOW'),
+        'detected_at':  detected_at,
+        'mttd_seconds': mttd_seconds,
+    }
+    
+    if alert['final_score'] > 0.85:
+        entity_key = f"entity_scores:{alert['entity_id']}"
         r.hset(entity_key, mapping={
-            'p_host':    result['p_host'],
-            'p_network': result['p_network'],
-            'score':     result['final_score'],
+            'p_host':    alert['p_host'],
+            'p_network': alert['p_network'],
+            'score':     alert['final_score'],
         })
         r.expire(entity_key, 86400)   # TTL: 24 hours
-        r.sadd('honeypot_ips', req.entity_id)
+        r.sadd('honeypot_ips', alert['entity_id'])
 
-    return result
+    # Store alert in Redis
+    r.lpush('alerts', json.dumps(alert))
+    r.ltrim('alerts', 0, 499)
+
+    # Track MTTD for metrics
+    if mttd_seconds is not None:
+        r.lpush('mttd_samples', mttd_seconds)
+        r.ltrim('mttd_samples', 0, 99)   # keep last 100 samples
+
+    return alert
 
 
 # ── Alert History ─────────────────────────────────────────────────────
@@ -106,12 +139,39 @@ async def alert_history(limit: int = 50):
 
 # ── Metrics Endpoint ──────────────────────────────────────────────────
 @app.get('/metrics')
-async def metrics():
+async def get_metrics():
+    total_alerts      = r.llen('alerts')
+    honeypot_events   = r.llen('honeypot_events')
+    honeypot_ip_count = r.scard('honeypot_ips')
+    retrain_events    = int(r.get('retrain_count') or 0)
+
+    # Calculate average MTTD from samples
+    mttd_samples = r.lrange('mttd_samples', 0, -1)
+    avg_mttd = None
+    if mttd_samples:
+        vals = [float(v) for v in mttd_samples]
+        avg_mttd = round(sum(vals) / len(vals), 3)
+
+    # Threat distribution counts
+    alerts_raw = r.lrange('alerts', 0, 49)
+    threat_counts = {'CRITICAL':0,'HIGH':0,'MEDIUM':0,'LOW':0}
+    for a in alerts_raw:
+        try:
+            level = json.loads(a).get('threat_level','LOW')
+            if level in threat_counts:
+                threat_counts[level] += 1
+        except:
+            pass
+
     return {
-        'honeypot_ip_count':  r.scard('honeypot_ips'),
-        'total_alerts':       r.llen('alerts'),
-        'honeypot_events':    r.llen('honeypot_events'),
+        'total_alerts':      total_alerts,
+        'honeypot_events':   honeypot_events,
+        'honeypot_ip_count': honeypot_ip_count,
+        'retrain_events':    retrain_events,
+        'avg_mttd_seconds':  avg_mttd,
+        'threat_counts':     threat_counts,
     }
+
 
 
 # ── Feedback / Retraining Endpoint ───────────────────────────────────
