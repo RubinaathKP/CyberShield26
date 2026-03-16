@@ -1,0 +1,34 @@
+{
+  "entity_id": "10.99.0.5",
+  "name": "Port Scan",
+  "host_features": {
+    "process_spawn_rate": 0.08,
+    "file_access_rate": 0.04,
+    "net_activity_rate": 0.62,
+    "process_chain_depth": 1,
+    "priv_escalation_count": 0,
+    "inject_attempt_count": 0,
+    "syscall_entropy": 2.1,
+    "trace_length": 4200,
+    "rule_outbound": 1,
+    "rule_priv_esc": 0,
+    "rule_sensitive_file": 0
+  },
+  "net_features": {
+    "Flow Duration": 180000,
+    "Total Fwd Packets": 48000,
+    "Total Backward Packets": 200,
+    "Flow Bytes/s": 42000,
+    "Flow Packets/s": 80000,
+    "Fwd Packets/s": 79800,
+    "Bwd Packets/s": 200,
+    "Avg Packet Size": 40,
+    "Avg Fwd Segment Size": 40,
+    "Init Fwd Win Bytes": 1024,
+    "SYN Flag Count": 48000,
+    "Fwd PSH Flags": 0,
+    "URG Flag Count": 0,
+    "botnet_c2_indicator": 0,
+    "port_scan_indicator": 1
+  }
+}

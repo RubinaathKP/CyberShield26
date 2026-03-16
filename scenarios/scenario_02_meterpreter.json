@@ -1,0 +1,34 @@
+{
+  "entity_id": "185.220.101.45",
+  "name": "Meterpreter",
+  "host_features": {
+    "process_spawn_rate": 0.45,
+    "file_access_rate": 0.28,
+    "net_activity_rate": 0.35,
+    "process_chain_depth": 4,
+    "priv_escalation_count": 6,
+    "inject_attempt_count": 2,
+    "syscall_entropy": 1.8,
+    "trace_length": 1400,
+    "rule_outbound": 1,
+    "rule_priv_esc": 1,
+    "rule_sensitive_file": 1
+  },
+  "net_features": {
+    "Flow Duration": 3600000,
+    "Total Fwd Packets": 720,
+    "Total Backward Packets": 718,
+    "Flow Bytes/s": 7400,
+    "Flow Packets/s": 7.1,
+    "Fwd Packets/s": 3.8,
+    "Bwd Packets/s": 3.3,
+    "Avg Packet Size": 310,
+    "Avg Fwd Segment Size": 295,
+    "Init Fwd Win Bytes": 8192,
+    "SYN Flag Count": 1,
+    "Fwd PSH Flags": 14,
+    "URG Flag Count": 0,
+    "botnet_c2_indicator": 1,
+    "port_scan_indicator": 0
+  }
+}

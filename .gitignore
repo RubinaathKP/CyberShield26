@@ -1,0 +1,24 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+data/
+*.log
+api_log.txt
+
+# Node
+node_modules/
+.vite/
+dist/
+dist-ssr/
+*.local
+
+# Tech-specific
+.DS_Store
+.idea/
+.vscode/
+
+# Project specific
+models/*.pkl
+models/*.joblib

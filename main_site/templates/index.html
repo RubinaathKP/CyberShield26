@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Corp - Future Solutions</title>
+    <!-- Use Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="ml-2 text-xl font-bold tracking-tight text-slate-900">Nexus Corp</span>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="/" class="border-blue-500 text-slate-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Home</a>
+                        <a href="/about" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">About Us</a>
+                        <a href="#" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Services</a>
+                        <a href="#" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Contact</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-sm text-slate-500 mr-4">Your IP: <span class="font-mono bg-slate-100 px-2 py-1 rounded">{{ client_ip }}</span></span>
+                    <button class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">Client Portal</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="flex-grow">
+        <div class="hero-gradient text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+                <div class="md:w-2/3">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6">
+                        Innovating the future, <br/><span class="text-blue-200">securing the present.</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl">
+                        Nexus Corp provides enterprise-grade infrastructure solutions for Fortune 500 companies. Trust our robust architecture to scale your business globally.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-md font-semibold text-lg transition-colors shadow-lg">Learn More</a>
+                        <a href="#" class="border border-white/30 hover:bg-white/10 px-6 py-3 rounded-md text-white font-semibold text-lg transition-colors">View Documentation</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features/Content area -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                <!-- Feature 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">High Performance</h3>
+                    <p class="text-slate-600">Our infrastructure guarantees 99.99% uptime with global edge caching and lightning-fast load balancers.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Enterprise Security</h3>
+                    <p class="text-slate-600">Military-grade encryption and advanced threat protection keep your critical data safe from modern cyber threats.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Scalable Storage</h3>
+                    <p class="text-slate-600">Petabyte-scale object storage designed for high durability and immediate retrieval times.</p>
+                </div>
+            </div>
+
+            <!-- Demo / Simulation Area -->
+            <div class="bg-slate-900 rounded-2xl p-8 md:p-12 text-center shadow-xl border border-slate-800 relative overflow-hidden">
+                <!-- Decorative background pattern -->
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#4f46e5 1px, transparent 1px); background-size: 20px 20px;"></div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">Cyber Shield Demonstration</h2>
+                    <p class="text-slate-300 max-w-2xl mx-auto mb-8">
+                        This is the original corporate website. To demonstrate the Cyber Shield ML threat detection and the Decoy Site redirection, use the button below to simulate an attack originating from your IP address (<span class="font-mono text-emerald-400">{{ client_ip }}</span>).
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <form method="POST" action="/trigger_attack" onsubmit="return confirmAttack()">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-red-900/50 transition-all flex items-center group">
+                                <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                Simulate RCE Attack
+                            </button>
+                        </form>
+                        <p class="text-xs text-slate-400 max-w-xs text-left">
+                            This will flag your IP as malicious, simulate a high-scoring alert, and silently redirect you to the honeypot for all future requests.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-50 border-t border-slate-200 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <span class="text-lg font-bold text-slate-800 tracking-tight">Nexus Corp</span>
+                    <span class="ml-2 text-sm text-slate-500">© 2024 All rights reserved.</span>
+                </div>
+                <div class="flex space-x-6 text-sm text-slate-500">
+                    <a href="#" class="hover:text-slate-900">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-900">Terms of Service</a>
+                    <a href="#" class="hover:text-slate-900">Security</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function confirmAttack() {
+            return confirm("WARNING:\n\nThis will flag your current IP as a threat.\nThe ML backend will register a CRITICAL alert.\nYou will be seamlessly routed to the Decoy Site.\n\nProceed with simulation?");
+        }
+    </script>
+</body>
+</html>
