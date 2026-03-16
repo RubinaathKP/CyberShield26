@@ -34,53 +34,101 @@ class InMemoryRedis:
     """Minimal Redis-compatible in-memory store for running without Redis."""
 
     def __init__(self):
-        self._lists: dict[str, collections.deque] = collections.defaultdict(collections.deque)
-        self._hashes: dict[str, dict] = collections.defaultdict(dict)
-        self._sets: dict[str, set] = collections.defaultdict(set)
-        self._strings: dict[str, str] = {}
+        self.db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "memory_db.json")
+        self._lists = collections.defaultdict(collections.deque)
+        self._hashes = collections.defaultdict(dict)
+        self._sets = collections.defaultdict(set)
+        self._strings = {}
+        self._load()
+
+    def _load(self):
+        if os.path.exists(self.db_path):
+            try:
+                with open(self.db_path, 'r') as f:
+                    data = json.load(f)
+                    for k, v in data.get('lists', {}).items():
+                        self._lists[k] = collections.deque(v)
+                    for k, v in data.get('hashes', {}).items():
+                        self._hashes[k] = v
+                    for k, v in data.get('sets', {}).items():
+                        self._sets[k] = set(v)
+                    self._strings = data.get('strings', {})
+            except: pass
+
+    def _save(self):
+        try:
+            data = {
+                'lists': {k: list(v) for k, v in self._lists.items()},
+                'hashes': {k: v for k, v in self._hashes.items()},
+                'sets': {k: list(v) for k, v in self._sets.items()},
+                'strings': self._strings
+            }
+            with open(self.db_path, 'w') as f:
+                json.dump(data, f)
+        except: pass
 
     def lpush(self, key, *values):
+        self._load()
         for v in values:
             self._lists[key].appendleft(v)
+        self._save()
         return len(self._lists[key])
 
     def lrange(self, key, start, stop):
+        self._load()
         lst = list(self._lists.get(key, []))
         if stop == -1:
             return lst[start:]
         return lst[start:stop + 1]
 
     def ltrim(self, key, start, stop):
+        self._load()
         lst = list(self._lists.get(key, []))
         self._lists[key] = collections.deque(lst[start:stop + 1])
+        self._save()
 
     def llen(self, key):
+        self._load()
         return len(self._lists.get(key, []))
 
     def hset(self, key, mapping=None, **kwargs):
+        self._load()
         if mapping:
             self._hashes[key].update(mapping)
         self._hashes[key].update(kwargs)
+        self._save()
 
     def expire(self, key, ttl):
-        pass  # TTL not enforced in memory
+        pass
 
     def sadd(self, key, *members):
+        self._load()
         self._sets[key].update(members)
+        self._save()
         return len(members)
 
     def scard(self, key):
+        self._load()
         return len(self._sets.get(key, set()))
 
+    def smembers(self, key):
+        self._load()
+        return self._sets.get(key, set())
+
     def get(self, key):
+        self._load()
         return self._strings.get(key)
 
     def set(self, key, value):
+        self._load()
         self._strings[key] = str(value)
+        self._save()
 
     def incr(self, key):
+        self._load()
         val = int(self._strings.get(key, 0)) + 1
         self._strings[key] = str(val)
+        self._save()
         return val
 
     def ping(self):
@@ -147,7 +195,7 @@ async def predict(payload: dict):
 
         # Attach SHAP explanations
         x_host_sc = store.host_scaler.transform(
-            np.array([[host_features[c] for c in store.host_cols]])
+            np.array([[host_features.get(c, 0) for c in store.host_cols]])
         )[0]
         x_net_sc = store.net_scaler.transform(
             np.array([[net_features.get(c, 0) for c in store.net_cols]]) if net_features else np.zeros((1, len(store.net_cols)))
@@ -156,12 +204,12 @@ async def predict(payload: dict):
         result['shap_host']    = app.state.explainer.explain_host(x_host_sc)[:5]
         result['shap_network'] = app.state.explainer.explain_network(x_net_sc)[:5]
         result['shap_meta']    = app.state.explainer.explain_meta(
-            result['p_host'], result['p_network']
+            result['p_host'], result['p_net']
         )
     except Exception:
         result = {
             'p_host': 0.0,
-            'p_network': 0.0,
+            'p_net': 0.0,
             'final_score': 0.0,
             'threat_level': 'LOW'
         }
@@ -177,7 +225,7 @@ async def predict(payload: dict):
         'id':           str(int(detected_at * 1000)),
         'entity_id':    payload.get('entity_id', 'unknown'),
         'p_host':       result.get('p_host', 0.0),
-        'p_network':    result.get('p_network', 0.0),
+        'p_net':        result.get('p_net', 0.0),
         'final_score':  result.get('final_score', 0.0),
         'threat_level': result.get('threat_level', 'LOW'),
         'timestamp':    detected_at,  # Changed from detected_at to timestamp for dashboard consistency
@@ -191,7 +239,7 @@ async def predict(payload: dict):
         entity_key = f"entity_scores:{alert['entity_id']}"
         r.hset(entity_key, mapping={
             'p_host':    alert['p_host'],
-            'p_network': alert['p_network'],
+            'p_net':     alert['p_net'],
             'score':     alert['final_score'],
         })
         r.expire(entity_key, 86400)   # TTL: 24 hours

@@ -52,7 +52,7 @@ class ModelStore:
 
         return {
             'p_host':       p_host,
-            'p_network':    p_net,
+            'p_net':        p_net,
             'final_score':  final_score,
             'threat_level': classify_score(final_score),
         }

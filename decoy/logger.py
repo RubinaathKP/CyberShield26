@@ -1,6 +1,7 @@
 import redis
 import json
 import time
+import os
 from flask import Request
 
 CONFIRMED_MALICIOUS_EVENTS = {
@@ -20,49 +21,106 @@ import collections
 # ── Redis with in-memory fallback ─────────────────────────────────────
 class InMemoryRedis:
     def __init__(self):
+        self.db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "memory_db.json")
         self._lists = collections.defaultdict(collections.deque)
         self._hashes = collections.defaultdict(dict)
         self._sets = collections.defaultdict(set)
         self._strings = {}
+        self._load()
+
+    def _load(self):
+        import os
+        if os.path.exists(self.db_path):
+            try:
+                import json
+                with open(self.db_path, 'r') as f:
+                    data = json.load(f)
+                    for k, v in data.get('lists', {}).items():
+                        self._lists[k] = collections.deque(v)
+                    for k, v in data.get('hashes', {}).items():
+                        self._hashes[k] = v
+                    for k, v in data.get('sets', {}).items():
+                        self._sets[k] = set(v)
+                    self._strings = data.get('strings', {})
+            except: pass
+
+    def _save(self):
+        try:
+            import json
+            data = {
+                'lists': {k: list(v) for k, v in self._lists.items()},
+                'hashes': {k: v for k, v in self._hashes.items()},
+                'sets': {k: list(v) for k, v in self._sets.items()},
+                'strings': self._strings
+            }
+            with open(self.db_path, 'w') as f:
+                json.dump(data, f)
+        except: pass
 
     def lpush(self, key, *values):
+        self._load()
         for v in values:
             self._lists[key].appendleft(v)
+        self._save()
         return len(self._lists[key])
 
     def lrange(self, key, start, stop):
+        self._load()
         lst = list(self._lists.get(key, []))
         if stop == -1: return lst[start:]
         return lst[start:stop + 1]
 
     def ltrim(self, key, start, stop):
+        self._load()
         lst = list(self._lists.get(key, []))
         self._lists[key] = collections.deque(lst[start:stop + 1])
+        self._save()
 
     def llen(self, key):
+        self._load()
         return len(self._lists.get(key, []))
 
     def hset(self, key, mapping=None, **kwargs):
+        self._load()
         if mapping: self._hashes[key].update(mapping)
         self._hashes[key].update(kwargs)
+        self._save()
 
     def hgetall(self, key):
+        self._load()
         return self._hashes.get(key, {})
 
     def rpop(self, key):
+        self._load()
         try:
-            return self._lists[key].pop()
-        except IndexError:
+            val = self._lists[key].pop()
+            self._save()
+            return val
+        except (IndexError, KeyError):
             return None
 
     def scard(self, key):
+        self._load()
         return len(self._sets.get(key, set()))
 
+    def smembers(self, key):
+        self._load()
+        return self._sets.get(key, set())
+
+    def sadd(self, key, *members):
+        self._load()
+        self._sets[key].update(members)
+        self._save()
+        return len(members)
+
     def get(self, key):
+        self._load()
         return self._strings.get(key)
 
     def set(self, key, value):
+        self._load()
         self._strings[key] = str(value)
+        self._save()
 
     def ping(self): return True
 
