@@ -1,0 +1,62 @@
+# CyberShield Custom Falco Rules
+# Each rule output uses CYBERSHIELD| prefix for forwarder.py parsing.
+# Whitelist entries keep false positives manageable.
+
+- rule: CyberShield Outbound Connection
+  desc: >
+    Non-standard process establishing an outbound TCP connection.
+    Covers reverse shells, C2 beaconing, and data exfiltration.
+  condition: >
+    evt.type in (connect) and
+    evt.dir = < and
+    fd.typechar = 4 and
+    not proc.name in (curl, wget, apt, apt-get, dpkg, pip, pip3,
+                      python3, node, npm, git, ssh, scp, rsync,
+                      chrome, firefox, snap, systemd, systemd-resolved) and
+    not fd.sip in (127.0.0.1) and
+    not fd.sip startswith '10.' and
+    not fd.sip startswith '172.16.' and
+    not fd.sip startswith '192.168.' and
+    fd.sport != 53 and
+    fd.sport != 80 and
+    fd.sport != 443
+  output: >
+    CYBERSHIELD|OUTBOUND|%proc.name|%proc.pid|%proc.ppid|
+    %user.name|%fd.sip|%fd.sport|%container.id
+  priority: WARNING
+  tags: [cybershield, network, outbound]
+
+- rule: CyberShield Privilege Escalation
+  desc: >
+    Process calling setuid/setgid outside expected system processes.
+    Covers post-exploitation privilege escalation attacks.
+  condition: >
+    evt.type in (setuid, setgid, setresuid, setresgid) and
+    not proc.name in (sudo, su, login, sshd, cron, passwd,
+                      systemd, dbus-daemon, polkitd, pkexec) and
+    user.uid != 0
+  output: >
+    CYBERSHIELD|PRIV_ESC|%proc.name|%proc.pid|%proc.ppid|
+    %user.name|%evt.type
+  priority: WARNING
+  tags: [cybershield, privilege]
+
+- rule: CyberShield Sensitive File Access
+  desc: >
+    Direct access to credential files and SSH keys by unexpected processes.
+    Covers Adduser attacks and credential harvesting.
+  condition: >
+    evt.type in (open, openat) and
+    fd.name in (/etc/shadow,
+                /etc/passwd,
+                /etc/sudoers,
+                /root/.ssh/id_rsa,
+                /root/.ssh/id_ed25519,
+                /root/.ssh/authorized_keys) and
+    not proc.name in (passwd, shadow, sshd, sudo, vim, nano, cat,
+                      less, more, grep, systemd)
+  output: >
+    CYBERSHIELD|SENSITIVE_FILE|%proc.name|%proc.pid|
+    %fd.name|%user.name
+  priority: ERROR
+  tags: [cybershield, credentials, sensitive]
