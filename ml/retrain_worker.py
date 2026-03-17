@@ -37,9 +37,9 @@ while True:
             entity_key = f"entity_scores:{event.get('src_ip', 'unknown')}"
             scores_raw = r.hgetall(entity_key)
 
-            if scores_raw and 'p_host' in scores_raw and 'p_network' in scores_raw:
+            if scores_raw and 'p_host' in scores_raw and 'p_net' in scores_raw:
                 p_host = float(scores_raw['p_host'])
-                p_net  = float(scores_raw['p_network'])
+                p_net  = float(scores_raw['p_net'])
             else:
                 # Fallback: use high-confidence synthetic values for confirmed events
                 p_host = 0.90

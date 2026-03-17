@@ -37,6 +37,24 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
           <Target />
           Live Detection
         </div>
+
+        <div className="nav-section-label">Demo & Comparison</div>
+        
+        <div 
+          className={`nav-item ${activePage === 'demo' ? 'active' : ''}`}
+          onClick={() => onNavigate('demo')}
+        >
+          <Shield size={18} />
+          Demo Scenarios
+        </div>
+
+        <div 
+          className={`nav-item ${activePage === 'compare' ? 'active' : ''}`}
+          onClick={() => onNavigate('compare')}
+        >
+          <Target size={18} />
+          Behavioral Comparator
+        </div>
         
         <div className="nav-section-label">System Logs</div>
         

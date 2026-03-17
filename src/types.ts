@@ -13,14 +13,30 @@ export interface HoneypotEvent {
   path: string
 }
 
+export interface SHAPValue {
+  feature: string
+  shap_value: number
+  feature_value: number
+}
+
+export interface SHAPMeta {
+  feature: string
+  contribution: number
+}
+
 export interface Alert {
-  id: number
+  id: string
   timestamp: number
-  event_type: string
-  severity: string
-  source_ip?: string
-  path?: string
-  description?: string
+  p_host: number
+  p_net: number
+  final_score: number
+  threat_level: string
+  detected_at: number
+  mttd_seconds?: number
+  shap_host?: SHAPValue[]
+  shap_network?: SHAPValue[]
+  shap_meta?: SHAPMeta[]
+  entity_id?: string
 }
 
 export interface AnalyzeRequest {
@@ -28,15 +44,16 @@ export interface AnalyzeRequest {
 }
 
 export interface AnalyzeResponse {
-  is_threat: boolean
-  confidence: number
-  threat_type: string
-  explanation: string
-  seriousness_score?: number
+  score: number
+  threat_level: string
+  findings: string[]
+  shap_host?: SHAPValue[]
+  shap_network?: SHAPValue[]
+  shap_meta?: SHAPMeta[]
 }
 
 export interface FeedbackRequest {
-  alert_id: number
+  alert_id: string
   accurate: boolean
   comments?: string
 }

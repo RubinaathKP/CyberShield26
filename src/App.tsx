@@ -4,8 +4,10 @@ import Dashboard from './pages/Dashboard'
 import LiveDetection from './pages/LiveDetection'
 import HoneypotLogs from './pages/HoneypotLogs'
 import Feedback from './pages/Feedback'
+import DemoScenarios from './pages/DemoScenarios'
+import Compare from './pages/Compare'
 
-export type PageKey = 'dashboard' | 'detection' | 'honeypot' | 'feedback'
+export type PageKey = 'dashboard' | 'detection' | 'honeypot' | 'feedback' | 'demo' | 'compare'
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageKey>('dashboard')
@@ -20,6 +22,10 @@ export default function App() {
         return <HoneypotLogs />
       case 'feedback':
         return <Feedback />
+      case 'demo':
+        return <DemoScenarios />
+      case 'compare':
+        return <Compare />
       default:
         return <Dashboard />
     }

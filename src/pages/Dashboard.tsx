@@ -7,9 +7,13 @@ import {
 import { api } from '../api'
 import type { Metrics, HoneypotEvent, Alert } from '../types'
 
+import SHAPExplainer from '../components/SHAPExplainer'
+
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [logs, setLogs] = useState<HoneypotEvent[]>([])
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,13 +23,15 @@ export default function Dashboard() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [mRes, lRes] = await Promise.all([
+      const [mRes, lRes, aRes] = await Promise.all([
         api.getMetrics().catch(() => null),
-        api.getHoneypotLog().catch(() => [])
+        api.getHoneypotLog().catch(() => []),
+        api.getAlertHistory().catch(() => [])
       ])
       
       if (mRes) setMetrics(mRes)
-      if (lRes) setLogs(lRes.slice(0, 10)) // show last 10
+      if (lRes) setLogs(lRes.slice(0, 10))
+      if (aRes) setAlerts(aRes)
     } catch (error) {
       console.error('Failed to fetch dashboard data', error)
     } finally {
@@ -155,12 +161,100 @@ export default function Dashboard() {
         </div>
       </div>
       
-      <div className="panel animate-in" style={{ animationDelay: '0.6s' }}>
+      <div className="panel animate-in" style={{ animationDelay: '0.6s', marginBottom: '28px' }}>
         <div className="panel-header">
           <div className="panel-title">
-            <ShieldAlert /> Recent High-Risk Events
+            <ShieldAlert /> Recent ML Alerts
           </div>
-          <span className="panel-badge danger">Live Events</span>
+          <span className="panel-badge danger">AI Detected</span>
+        </div>
+        <div className="panel-body" style={{ padding: 0 }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Entity ID</th>
+                  <th>Final Score</th>
+                  <th>Threat Level</th>
+                  <th>XAI Analysis</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.length > 0 ? alerts.slice(0, 10).map((alert, i) => (
+                  <tr key={i} className={selectedAlert?.id === alert.id ? 'active' : ''}>
+                    <td>{new Date(alert.timestamp * 1000).toLocaleString()}</td>
+                    <td><span className="path-badge">{alert.entity_id}</span></td>
+                    <td>{(alert.final_score * 100).toFixed(1)}%</td>
+                    <td>
+                      <span className={`event-type-badge ${alert.threat_level === 'CRITICAL' || alert.threat_level === 'HIGH' ? 'critical' : 'warning'}`}>
+                        {alert.threat_level}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="refresh-btn" 
+                        style={{ padding: '4px 10px', fontSize: '0.7rem' }}
+                        onClick={() => setSelectedAlert(alert)}
+                      >
+                        Evaluate Why
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>No ML alerts found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {selectedAlert && (
+        <div className="panel animate-in" style={{ marginBottom: '28px', border: '1px solid var(--accent-cyan)' }}>
+          <div className="panel-header">
+            <div className="panel-title">
+              <Activity /> SHAP Explainability: Alert {selectedAlert.id}
+            </div>
+            <button className="refresh-btn red" onClick={() => setSelectedAlert(null)}>Close</button>
+          </div>
+          <div className="panel-body">
+            <div className="dashboard-grid">
+              <SHAPExplainer 
+                data={selectedAlert.shap_host || []} 
+                title="Host Features Attribution" 
+              />
+              <SHAPExplainer 
+                data={selectedAlert.shap_network || []} 
+                title="Network Features Attribution" 
+              />
+            </div>
+            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+              <h4 style={{ fontSize: '0.9rem', marginBottom: '10px' }}>Meta-Classifier Composition</h4>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                {selectedAlert.shap_meta?.map((m, i) => (
+                  <div key={i} style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{m.feature}</div>
+                    <div style={{ height: '8px', background: 'var(--bg-primary)', borderRadius: '4px', marginTop: '6px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${m.contribution * 100}%`, background: 'var(--accent-purple)' }}></div>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', marginTop: '4px', fontWeight: 'bold' }}>{(m.contribution * 100).toFixed(1)}% weight</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="panel animate-in" style={{ animationDelay: '0.7s' }}>
+        <div className="panel-header">
+          <div className="panel-title">
+            <Server /> Recent Honeypot Interactions
+          </div>
+          <span className="panel-badge">Log</span>
         </div>
         <div className="panel-body" style={{ padding: 0 }}>
           <div style={{ overflowX: 'auto' }}>
@@ -169,31 +263,19 @@ export default function Dashboard() {
                 <tr>
                   <th>Timestamp</th>
                   <th>Event Type</th>
-                  <th>Path / Target</th>
-                  <th>Severity</th>
+                  <th>Path</th>
                 </tr>
               </thead>
               <tbody>
-                {logs.length > 0 ? logs.slice(0, 5).map((log, i) => (
+                {logs.length > 0 ? logs.map((log, i) => (
                   <tr key={i}>
-                    <td>{new Date(log.timestamp * 1000).toLocaleString() || 'N/A'}</td>
-                    <td>
-                      <span className={`event-type-badge ${log.event_type.includes('rce') ? 'critical' : 'warning'}`}>
-                        {log.event_type}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="path-badge">{log.path}</span>
-                    </td>
-                    <td>
-                      <div className="severity-bar" style={{ width: '80px', marginTop: 0 }}>
-                        <div className={`severity-fill ${log.event_type.includes('rce') ? 'critical' : 'medium'}`} style={{ width: log.event_type.includes('rce') ? '90%' : '60%' }}></div>
-                      </div>
-                    </td>
+                    <td>{new Date(log.timestamp * 1000).toLocaleString()}</td>
+                    <td><span className="event-type-badge warning">{log.event_type}</span></td>
+                    <td><span className="path-badge">{log.path}</span></td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '30px' }}>No recent events found</td>
+                    <td colSpan={3} style={{ textAlign: 'center', padding: '20px' }}>No honeypot activity</td>
                   </tr>
                 )}
               </tbody>

@@ -1,0 +1,34 @@
+{
+  "entity_id": "admin-host",
+  "name": "Benign Admin",
+  "host_features": {
+    "process_spawn_rate": 0.30,
+    "file_access_rate": 0.52,
+    "net_activity_rate": 0.18,
+    "process_chain_depth": 3,
+    "priv_escalation_count": 1,
+    "inject_attempt_count": 0,
+    "syscall_entropy": 3.2,
+    "trace_length": 1100,
+    "rule_outbound": 1,
+    "rule_priv_esc": 1,
+    "rule_sensitive_file": 0
+  },
+  "net_features": {
+    "Flow Duration": 12000000,
+    "Total Fwd Packets": 28,
+    "Total Backward Packets": 24,
+    "Flow Bytes/s": 9800,
+    "Flow Packets/s": 4.3,
+    "Fwd Packets/s": 2.3,
+    "Bwd Packets/s": 2.0,
+    "Avg Packet Size": 480,
+    "Avg Fwd Segment Size": 460,
+    "Init Fwd Win Bytes": 65535,
+    "SYN Flag Count": 1,
+    "Fwd PSH Flags": 3,
+    "URG Flag Count": 0,
+    "botnet_c2_indicator": 0,
+    "port_scan_indicator": 0
+  }
+}

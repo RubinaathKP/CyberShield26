@@ -1,0 +1,34 @@
+{
+  "entity_id": "ssh-brute",
+  "name": "Hydra Brute",
+  "host_features": {
+    "process_spawn_rate": 0.38,
+    "file_access_rate": 0.08,
+    "net_activity_rate": 0.55,
+    "process_chain_depth": 2,
+    "priv_escalation_count": 0,
+    "inject_attempt_count": 0,
+    "syscall_entropy": 1.6,
+    "trace_length": 2000,
+    "rule_outbound": 1,
+    "rule_priv_esc": 0,
+    "rule_sensitive_file": 0
+  },
+  "net_features": {
+    "Flow Duration": 200000,
+    "Total Fwd Packets": 8,
+    "Total Backward Packets": 2,
+    "Flow Bytes/s": 60000,
+    "Flow Packets/s": 50,
+    "Fwd Packets/s": 40,
+    "Bwd Packets/s": 10,
+    "Avg Packet Size": 160,
+    "Avg Fwd Segment Size": 140,
+    "Init Fwd Win Bytes": 1024,
+    "SYN Flag Count": 1,
+    "Fwd PSH Flags": 4,
+    "URG Flag Count": 0,
+    "botnet_c2_indicator": 0,
+    "port_scan_indicator": 0
+  }
+}

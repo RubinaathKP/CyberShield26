@@ -53,7 +53,7 @@ class ThreatExplainer:
         result.sort(key=lambda x: abs(x['shap_value']), reverse=True)
         return result
 
-    def explain_meta(self, p_host, p_network):
+    def explain_meta(self, p_host, p_net):
         """
         Simple linear attribution for the meta-classifier (SGDClassifier).
         Returns contribution of each base model to the final threat score.
@@ -65,6 +65,6 @@ class ThreatExplainer:
             },
             {
                 'feature':      'network_model_probability',
-                'contribution': round(p_network, 4),
+                'contribution': round(p_net, 4),
             },
         ]
