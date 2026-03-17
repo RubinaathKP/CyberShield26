@@ -27,8 +27,6 @@ A dual-model ML-powered threat detection system with an integrated honeypot deco
 
 ---
 
-## Phase A: ML Pipeline
-
 ### Directory Structure
 
 ```
@@ -72,9 +70,8 @@ threat-detection/
 | ADFA-LD | https://research.unsw.edu.au/projects/adfa-ld | `data/adfa_ld/` |
 | CIC-IDS 2017 | https://www.unb.ca/cic/datasets/ids-2017.html | `data/cicids2017/` |
 
-> **Note:** CIC-IDS 2017 requires registration. Download Tuesday–Friday CSV files only.
+> **Note:** CIC-IDS 2017 requires registration.
 
-### Hackathon Execution Order
 
 | Step | Command | Wait for |
 |------|---------|---------|
@@ -85,13 +82,7 @@ threat-detection/
 | 5 | `python ml/train_meta_classifier.py` | `models/meta_clf.pkl` created |
 | 6 | `uvicorn api.main:app --host 0.0.0.0 --port 8000` | API startup message |
 | 7 | `python ml/retrain_worker.py` (background) | Worker polling message |
-| 8 | `cd decoy && flask run --port 5001` | Decoy app running |
 
-> **Important:** Run steps 1–5 **before hackathon demo day**. Pre-trained `.pkl` files should be committed so no training is needed live.
-
----
-
-## Phase B: Decoy Website
 
 ### Running the Decoy
 
@@ -114,18 +105,7 @@ flask run --host 0.0.0.0 --port 5001
 | `/../etc/passwd` | `path_traversal` | HIGH |
 | `POST /login` | `credential_attempt` | HIGH |
 
-### Redis Keys
 
-| Key | Content |
-|-----|---------|
-| `honeypot_events` | All classified security events |
-| `honeypot_raw_requests` | Every raw HTTP request |
-| `honeypot_retrain_queue` | Events queued for ML retraining |
-| `honeypot_ips` | Set of IPs flagged for redirect |
-| `alerts` | FastAPI threat alert stream |
-| `entity_scores:{ip}` | p_host, p_network, score per entity |
-
----
 
 ## FastAPI Endpoints
 
@@ -140,27 +120,8 @@ flask run --host 0.0.0.0 --port 5001
 
 ---
 
-## Environment Variables
 
-```bash
-# Required: Redis (default: localhost:6379, no auth)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Decoy app secret key is generated randomly at startup
-```
-
----
-
-## nginx Redirect Setup (Linux only)
-
-See **B9** in the technical guide. Requires `lua-resty-redis` module.
-The detection backend adds IPs via `r.sadd('honeypot_ips', ip)` — 
-nginx reads this Redis set and transparently proxies flagged IPs to the decoy.
-
----
-
-## Model Performance Targets
+## Model Performance
 
 | Model | Metric | Target |
 |-------|--------|--------|
@@ -168,4 +129,3 @@ nginx reads this Redis set and transparently proxies flagged IPs to the decoy.
 | Network RF | F1 (attack class) | ≥ 0.88 |
 | Meta-Classifier | ROC-AUC | ≥ 0.92 |
 
-If Host RF F1 < 0.88, try: `n_estimators=400` or `max_depth=10`.
